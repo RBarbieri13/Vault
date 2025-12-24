@@ -8,6 +8,10 @@ export type Tool = {
   categoryId: string;
   isPinned: boolean;
   createdAt: number;
+  whatItIs: string;
+  capabilities: string[];
+  bestFor: string[];
+  notes?: string;
 };
 
 export type Category = {
@@ -42,6 +46,18 @@ export const INITIAL_TOOLS: Record<string, Tool> = {
     categoryId: 'cat_chatbots',
     isPinned: true,
     createdAt: Date.now(),
+    whatItIs: 'A conversational AI model developed by OpenAI that uses deep learning to generate human-like text responses based on user inputs.',
+    capabilities: [
+      'Generates text, code, and creative content',
+      'Provides answers to complex queries across various domains',
+      'Supports context-aware conversations and follow-up questions',
+      'Analyzes and summarizes large volumes of text'
+    ],
+    bestFor: [
+      'General purpose queries and research',
+      'Code generation and debugging',
+      'Drafting and editing written content'
+    ]
   },
   'tool_google_labs': {
     id: 'tool_google_labs',
@@ -53,6 +69,17 @@ export const INITIAL_TOOLS: Record<string, Tool> = {
     categoryId: 'cat_image',
     isPinned: false,
     createdAt: Date.now(),
+    whatItIs: 'An experimental playground where Google tests early-stage AI projects and features before wider release.',
+    capabilities: [
+      'Access early-access AI experiments',
+      'Test new generative AI features for creative work',
+      'Provide feedback directly to Google engineering teams'
+    ],
+    bestFor: [
+      'Early adopters wanting to test new tech',
+      'Exploring experimental creative tools',
+      'Tracking Google’s AI development roadmap'
+    ]
   },
   'tool_reimagine': {
     id: 'tool_reimagine',
@@ -64,6 +91,18 @@ export const INITIAL_TOOLS: Record<string, Tool> = {
     categoryId: 'cat_image',
     isPinned: false,
     createdAt: Date.now(),
+    whatItIs: 'An AI-driven platform for virtual staging and interior redesign that transforms photos of empty or furnished spaces.',
+    capabilities: [
+      'Virtually stages empty rooms with furniture and decor',
+      'Redesigns existing spaces with different styles',
+      'Enhances exterior curb appeal',
+      'Removes unwanted objects from property photos'
+    ],
+    bestFor: [
+      'Real estate agents and property managers',
+      'Interior designers visualizing concepts',
+      'Homeowners planning renovations'
+    ]
   },
   'tool_adeptly': {
     id: 'tool_adeptly',
@@ -75,6 +114,18 @@ export const INITIAL_TOOLS: Record<string, Tool> = {
     categoryId: 'cat_dev',
     isPinned: false,
     createdAt: Date.now(),
+    whatItIs: 'A platform for building, testing, and deploying autonomous AI agents that can perform tasks and interact with other systems.',
+    capabilities: [
+      'Design custom AI agents with specific behaviors',
+      'Test agent performance in simulated environments',
+      'Deploy agents to handle automated workflows',
+      'Monitor and analytics for agent activities'
+    ],
+    bestFor: [
+      'Developers building autonomous systems',
+      'Automating complex, multi-step workflows',
+      'Creating specialized AI assistants'
+    ]
   },
   'tool_punku': {
     id: 'tool_punku',
@@ -86,6 +137,18 @@ export const INITIAL_TOOLS: Record<string, Tool> = {
     categoryId: 'cat_dev',
     isPinned: false,
     createdAt: Date.now(),
+    whatItIs: 'A specialized AI development tool designed to assist with coding tasks and streamline the software development lifecycle.',
+    capabilities: [
+      'Assists with code generation and refactoring',
+      'Provides intelligent code completion and suggestions',
+      'Helps debug and optimize existing codebases',
+      'Integrates with common development environments'
+    ],
+    bestFor: [
+      'Software engineers and developers',
+      'Accelerating coding workflows',
+      'Improving code quality and consistency'
+    ]
   },
   'tool_simular': {
     id: 'tool_simular',
@@ -94,9 +157,21 @@ export const INITIAL_TOOLS: Record<string, Tool> = {
     type: 'Simulation',
     summary: 'AI platform for creating realistic simulations.',
     tags: ['Simulation', 'Data', 'Modeling'],
-    categoryId: 'cat_image', // Assuming creative/visual for now based on name
+    categoryId: 'cat_image', 
     isPinned: false,
     createdAt: Date.now(),
+    whatItIs: 'An AI platform focused on generating high-fidelity simulations and synthetic data for training and testing AI models.',
+    capabilities: [
+      'Generates photorealistic synthetic environments',
+      'Creates diverse scenarios for edge-case testing',
+      'Simulates physical interactions and dynamics',
+      'Scales data generation for ML model training'
+    ],
+    bestFor: [
+      'Computer vision researchers',
+      'Autonomous vehicle testing',
+      'Robotics simulation and training'
+    ]
   },
   'tool_clickup': {
     id: 'tool_clickup',
@@ -108,6 +183,18 @@ export const INITIAL_TOOLS: Record<string, Tool> = {
     categoryId: 'cat_chatbots',
     isPinned: true,
     createdAt: Date.now(),
+    whatItIs: 'A built-in chat interface within the ClickUp platform that leverages AI to connect conversations directly to tasks and projects.',
+    capabilities: [
+      'Contextualizes chat messages with task data',
+      'Summarizes long discussion threads',
+      'Creates tasks directly from chat messages',
+      'Provides AI-driven answers from workspace knowledge'
+    ],
+    bestFor: [
+      'Teams using ClickUp for project management',
+      'Reducing context switching between chat and tasks',
+      'Streamlining internal communication'
+    ]
   },
 };
 

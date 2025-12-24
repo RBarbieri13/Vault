@@ -22,7 +22,7 @@ export function ToolDetails() {
         </div>
         <h3 className="text-lg font-medium text-foreground">No tool selected</h3>
         <p className="max-w-sm mt-2">Select a tool from the sidebar to view its details, or create a new one to get started.</p>
-        <Button className="mt-6" onClick={() => dispatch({ type: 'ADD_TOOL', payload: { name: '', url: '', type: '', summary: '', tags: [], categoryId: state.categories[0]?.id || '' } })}>
+        <Button className="mt-6" onClick={() => dispatch({ type: 'ADD_TOOL', payload: { name: '', url: '', type: '', summary: '', whatItIs: '', capabilities: [], bestFor: [], tags: [], categoryId: state.categories[0]?.id || '' } })}>
           Create New Tool
         </Button>
       </div>
@@ -80,11 +80,48 @@ export function ToolDetails() {
 
       <div className="grid gap-8">
         <Card className="border-none shadow-sm bg-card/50">
-          <CardContent className="pt-6">
-            <h3 className="text-lg font-semibold mb-3">About</h3>
-            <p className="text-lg leading-relaxed text-muted-foreground">
-              {selectedTool.summary || "No summary provided."}
-            </p>
+          <CardContent className="pt-6 space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-2">What It Is</h3>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                {selectedTool.whatItIs || selectedTool.summary || "No description provided."}
+              </p>
+            </div>
+
+            {selectedTool.capabilities && selectedTool.capabilities.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">Capabilities</h3>
+                <ul className="grid gap-2">
+                  {selectedTool.capabilities.map((cap, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm">
+                      <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                      <span>{cap}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {selectedTool.bestFor && selectedTool.bestFor.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">Best For</h3>
+                <ul className="grid gap-2">
+                  {selectedTool.bestFor.map((item, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm">
+                      <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {selectedTool.notes && (
+              <div className="pt-4 border-t border-border/50">
+                 <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2">Notes</h3>
+                 <p className="text-sm text-muted-foreground italic">{selectedTool.notes}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 

@@ -59,7 +59,14 @@ function appReducer(state: AppState, action: Action): AppState {
       if (!state.tools[id]) return state;
 
       const oldTool = state.tools[id];
-      const newTool = { ...oldTool, ...updates };
+      // Merge updates, but specifically handle optional fields that might be cleared
+      const newTool = { 
+         ...oldTool, 
+         ...updates,
+         // Ensure arrays are handled correctly if passed in payload
+         capabilities: updates.capabilities || oldTool.capabilities || [],
+         bestFor: updates.bestFor || oldTool.bestFor || [],
+      };
       
       // Handle Category Change
       let newCategories = state.categories;

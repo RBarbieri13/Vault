@@ -16,6 +16,10 @@ const toolSchema = z.object({
   url: z.string().url('Must be a valid URL'),
   type: z.string().min(1, 'Type is required'),
   summary: z.string().optional(),
+  whatItIs: z.string().optional(),
+  capabilities: z.string().optional(), // New line separated
+  bestFor: z.string().optional(), // New line separated
+  notes: z.string().optional(),
   tags: z.string().optional(), // We'll parse comma separated tags
   categoryId: z.string().min(1, 'Category is required'),
 });
@@ -34,6 +38,10 @@ export function ToolModal({ isOpen, onClose, toolToEdit }: ToolModalProps) {
     url: toolToEdit?.url || '',
     type: toolToEdit?.type || '',
     summary: toolToEdit?.summary || '',
+    whatItIs: toolToEdit?.whatItIs || '',
+    capabilities: toolToEdit?.capabilities?.join('\n') || '',
+    bestFor: toolToEdit?.bestFor?.join('\n') || '',
+    notes: toolToEdit?.notes || '',
     tags: toolToEdit?.tags.join(', ') || '',
     categoryId: toolToEdit?.categoryId || state.categories[0]?.id || '',
   };
@@ -51,6 +59,10 @@ export function ToolModal({ isOpen, onClose, toolToEdit }: ToolModalProps) {
         url: toolToEdit?.url || '',
         type: toolToEdit?.type || '',
         summary: toolToEdit?.summary || '',
+        whatItIs: toolToEdit?.whatItIs || '',
+        capabilities: toolToEdit?.capabilities?.join('\n') || '',
+        bestFor: toolToEdit?.bestFor?.join('\n') || '',
+        notes: toolToEdit?.notes || '',
         tags: toolToEdit?.tags.join(', ') || '',
         categoryId: toolToEdit?.categoryId || state.categories[0]?.id || '',
       });
@@ -59,6 +71,8 @@ export function ToolModal({ isOpen, onClose, toolToEdit }: ToolModalProps) {
 
   const onSubmit = (data: any) => {
     const tagsArray = data.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t.length > 0);
+    const capabilitiesArray = data.capabilities.split('\n').map((t: string) => t.trim()).filter((t: string) => t.length > 0);
+    const bestForArray = data.bestFor.split('\n').map((t: string) => t.trim()).filter((t: string) => t.length > 0);
     
     if (toolToEdit) {
       dispatch({
@@ -69,6 +83,10 @@ export function ToolModal({ isOpen, onClose, toolToEdit }: ToolModalProps) {
           url: data.url,
           type: data.type,
           summary: data.summary,
+          whatItIs: data.whatItIs,
+          capabilities: capabilitiesArray,
+          bestFor: bestForArray,
+          notes: data.notes,
           tags: tagsArray,
           categoryId: data.categoryId,
         },
@@ -81,6 +99,10 @@ export function ToolModal({ isOpen, onClose, toolToEdit }: ToolModalProps) {
           url: data.url,
           type: data.type,
           summary: data.summary,
+          whatItIs: data.whatItIs,
+          capabilities: capabilitiesArray,
+          bestFor: bestForArray,
+          notes: data.notes,
           tags: tagsArray,
           categoryId: data.categoryId,
         },
@@ -145,7 +167,28 @@ export function ToolModal({ isOpen, onClose, toolToEdit }: ToolModalProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="summary">Summary</Label>
+            <Label htmlFor="whatItIs">What It Is (1-2 sentences)</Label>
+            <Textarea id="whatItIs" {...register('whatItIs')} placeholder="A brief, high-level description..." className="resize-none h-20" data-testid="input-tool-whatItIs" />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="capabilities">Capabilities (one per line)</Label>
+              <Textarea id="capabilities" {...register('capabilities')} placeholder="- Feature 1&#10;- Feature 2" className="resize-none h-32" data-testid="input-tool-capabilities" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bestFor">Best For (one per line)</Label>
+              <Textarea id="bestFor" {...register('bestFor')} placeholder="- User Type 1&#10;- Use Case 2" className="resize-none h-32" data-testid="input-tool-bestFor" />
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+             <Label htmlFor="notes">Notes (Optional)</Label>
+             <Textarea id="notes" {...register('notes')} placeholder="Any extra observations..." className="resize-none h-16" data-testid="input-tool-notes" />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="summary">Legacy Summary</Label>
             <Textarea id="summary" {...register('summary')} placeholder="Brief description..." className="resize-none h-20" data-testid="input-tool-summary" />
           </div>
 

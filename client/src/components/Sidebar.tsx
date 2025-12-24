@@ -75,7 +75,8 @@ function SortableToolItem({ id, tool, isActive }: { id: string, tool: any, isAct
         <GripVertical className="w-3 h-3" />
       </div>
       <div className="truncate flex-1">
-        {tool.name}
+        <div className="font-medium text-foreground">{tool.name}</div>
+        <div className="text-[10px] text-muted-foreground truncate">{tool.whatItIs || tool.summary}</div>
       </div>
       {tool.isPinned && <Star className="w-3 h-3 fill-current opacity-50" />}
     </div>
