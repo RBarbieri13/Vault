@@ -1,35 +1,36 @@
 import React, { useState } from 'react';
-import { AppProvider } from '@/lib/store';
 import { Sidebar, MobileSidebar } from '@/components/Sidebar';
-import { ToolDetails } from '@/components/ToolDetails';
+import { ToolTable } from '@/components/ToolTable';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
+import { Menu } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from '@/components/ui/button';
 
 export default function Home() {
-  const [sidebarWidth, setSidebarWidth] = useState(20);
-
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
       {/* Mobile Sidebar */}
-      <MobileSidebar />
-
-      {/* Desktop Layout */}
-      <div className="hidden md:flex flex-1 h-full">
-         <ResizablePanelGroup direction="horizontal">
-            <ResizablePanel defaultSize={20} minSize={15} maxSize={30} className="min-w-[250px]">
-               <Sidebar className="h-full w-full border-r-0" />
-            </ResizablePanel>
-            <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={80}>
-               <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-                  <ToolDetails />
-               </main>
-            </ResizablePanel>
-         </ResizablePanelGroup>
+      <div className="md:hidden absolute top-4 left-4 z-50">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="icon">
+              <Menu className="h-4 w-4" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="p-0 w-[280px]">
+            <Sidebar className="h-full border-none w-full" />
+          </SheetContent>
+        </Sheet>
       </div>
 
-      {/* Mobile Content */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative md:hidden">
-         <ToolDetails />
+      {/* Desktop Layout - Fixed Sidebar as requested */}
+      <div className="hidden md:flex h-full flex-shrink-0">
+         <Sidebar className="h-full w-[280px]" />
+      </div>
+
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
+         <ToolTable />
       </main>
     </div>
   );
