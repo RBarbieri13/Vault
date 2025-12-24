@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import { AppProvider } from "@/lib/store";
+import { ThemeProvider } from "@/components/theme-provider";
 
 function Router() {
   return (
@@ -19,12 +20,14 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </AppProvider>
+      <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+        <AppProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </AppProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

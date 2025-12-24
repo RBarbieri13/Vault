@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -6,10 +6,13 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { ToolModal } from './ToolModal';
+import { ModeToggle } from './mode-toggle';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import { 
   Search, Plus, MoreHorizontal, FolderPlus, 
   Trash, Edit, Download, Upload, Star, 
-  GripVertical, Command, ChevronRight
+  GripVertical, Command, ChevronRight,
+  Menu
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -26,7 +29,8 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent
+  DragEndEvent,
+  DragOverlay
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -37,6 +41,8 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { toast } from '@/hooks/use-toast';
+import { useHotkeys } from 'react-hotkeys-hook';
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 // Sortable Item Component
 function SortableToolItem({ id, tool, isActive }: { id: string, tool: any, isActive: boolean }) {
@@ -52,8 +58,8 @@ function SortableToolItem({ id, tool, isActive }: { id: string, tool: any, isAct
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isDragging ? 10 : 1,
-    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : 1,
+    opacity: isDragging ? 0.4 : 1,
   };
 
   const { dispatch } = useApp();
@@ -63,30 +69,34 @@ function SortableToolItem({ id, tool, isActive }: { id: string, tool: any, isAct
       ref={setNodeRef} 
       style={style} 
       className={cn(
-        "group flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors cursor-pointer select-none",
+        "group flex items-center gap-2 px-2 py-2 rounded-md text-sm transition-all cursor-pointer select-none border border-transparent",
         isActive 
-          ? "bg-primary text-primary-foreground font-medium" 
-          : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          ? "bg-primary text-primary-foreground font-medium shadow-sm" 
+          : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:border-sidebar-border/50"
       )}
       onClick={() => dispatch({ type: 'SELECT_TOOL', payload: { id: tool.id } })}
       data-testid={`tool-item-${tool.id}`}
     >
-      <div {...attributes} {...listeners} className="opacity-0 group-hover:opacity-50 hover:!opacity-100 cursor-grab active:cursor-grabbing p-0.5">
-        <GripVertical className="w-3 h-3" />
+      <div {...attributes} {...listeners} className="opacity-0 group-hover:opacity-50 hover:!opacity-100 cursor-grab active:cursor-grabbing p-1 -ml-1 rounded hover:bg-black/5 dark:hover:bg-white/10 transition-opacity">
+        <GripVertical className="w-3.5 h-3.5" />
       </div>
-      <div className="truncate flex-1">
-        <div className="font-medium text-foreground">{tool.name}</div>
-        <div className="text-[10px] text-muted-foreground truncate">{tool.whatItIs || tool.summary}</div>
+      <div className="truncate flex-1 min-w-0">
+        <div className="font-medium truncate leading-tight">{tool.name}</div>
+        <div className="text-[10px] text-muted-foreground truncate opacity-80 mt-0.5">{tool.whatItIs || tool.summary}</div>
       </div>
-      {tool.isPinned && <Star className="w-3 h-3 fill-current opacity-50" />}
+      {tool.isPinned && <Star className="w-3 h-3 fill-current text-yellow-500 flex-shrink-0" />}
     </div>
   );
 }
 
-export function Sidebar() {
+export function Sidebar({ className }: { className?: string }) {
   const { state, dispatch } = useApp();
   const [isAddToolOpen, setIsAddToolOpen] = useState(false);
-  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  // Keyboard shortcuts
+  useHotkeys('mod+k', (e) => { e.preventDefault(); document.getElementById('search-tools')?.focus() });
+  useHotkeys('mod+n', (e) => { e.preventDefault(); setIsAddToolOpen(true) });
 
   // Filter tools based on search
   const filteredTools = Object.values(state.tools).filter(t => 
@@ -103,14 +113,15 @@ export function Sidebar() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
+  const handleDragStart = (event: any) => {
+    setActiveId(event.active.id);
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
+    setActiveId(null);
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    // Find which category we are in
-    // This simple implementation assumes we only reorder within the same category for now
-    // Or we need to look up which category holds these items.
-    
     // Find category containing the active item
     const activeCategory = state.categories.find(c => c.toolIds.includes(active.id as string));
     if (!activeCategory) return;
@@ -161,84 +172,113 @@ export function Sidebar() {
 
   const handleAddCategory = () => {
     const name = prompt("Enter category name:");
-    if (name) dispatch({ type: 'ADD_CATEGORY', payload: { name } });
+    if (name) {
+      dispatch({ type: 'ADD_CATEGORY', payload: { name } });
+      toast({ title: "Category Added", description: `"${name}" has been created.` });
+    }
   };
 
   const handleRenameCategory = (id: string, currentName: string) => {
     const name = prompt("Rename category:", currentName);
-    if (name) dispatch({ type: 'RENAME_CATEGORY', payload: { id, name } });
+    if (name) {
+       dispatch({ type: 'RENAME_CATEGORY', payload: { id, name } });
+       toast({ title: "Category Renamed", description: `Renamed to "${name}".` });
+    }
   };
 
+  const handleDeleteCategory = (id: string) => {
+    if(confirm("Delete this category and all its tools?")) {
+      dispatch({ type: 'DELETE_CATEGORY', payload: { id } });
+      toast({ title: "Category Deleted", description: "Category and its tools removed." });
+    }
+  }
+
   return (
-    <div className="w-80 border-r border-sidebar-border bg-sidebar text-sidebar-foreground flex flex-col h-screen flex-shrink-0">
-      {/* Header */}
-      <div className="p-4 border-b border-sidebar-border">
+    <div className={cn("flex flex-col h-full bg-sidebar text-sidebar-foreground", className)}>
+      {/* Header - Sticky */}
+      <div className="p-4 border-b border-sidebar-border bg-sidebar/95 backdrop-blur supports-[backdrop-filter]:bg-sidebar/60 sticky top-0 z-10">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-lg tracking-tight flex items-center gap-2">
-            <Command className="w-5 h-5" />
-            AI Vault
-          </h2>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Manage</DropdownMenuLabel>
-              <DropdownMenuItem onClick={handleExport}>
-                <Download className="w-4 h-4 mr-2" /> Export JSON
-              </DropdownMenuItem>
-              <div className="relative flex select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 cursor-pointer hover:bg-accent">
-                <Upload className="w-4 h-4 mr-2" />
-                Import JSON
-                <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept=".json" onChange={handleImport} />
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-2">
+            <div className="bg-primary text-primary-foreground p-1 rounded-md">
+              <Command className="w-4 h-4" />
+            </div>
+            <h2 className="font-semibold text-lg tracking-tight">AI Vault</h2>
+          </div>
+          <div className="flex items-center gap-1">
+            <ModeToggle />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreHorizontal className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Manage</DropdownMenuLabel>
+                <DropdownMenuItem onClick={handleExport}>
+                  <Download className="w-4 h-4 mr-2" /> Export JSON
+                </DropdownMenuItem>
+                <div className="relative flex select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 cursor-pointer hover:bg-accent">
+                  <Upload className="w-4 h-4 mr-2" />
+                  Import JSON
+                  <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept=".json" onChange={handleImport} />
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
         
-        <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <div className="relative group">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <Input 
-            placeholder="Search tools..." 
-            className="pl-9 bg-sidebar-accent/50 border-none shadow-none focus-visible:ring-1" 
+            id="search-tools"
+            placeholder="Search tools... (Cmd+K)" 
+            className="pl-9 bg-sidebar-accent/50 border-transparent shadow-none focus-visible:ring-1 focus-visible:bg-background transition-all" 
             value={state.searchQuery}
             onChange={(e) => dispatch({ type: 'SET_SEARCH_QUERY', payload: { query: e.target.value } })}
           />
         </div>
       </div>
 
-      <ScrollArea className="flex-1 px-3 py-4">
-        <div className="space-y-6">
+      {/* Main Content */}
+      <ScrollArea className="flex-1">
+        <div className="p-3 space-y-6">
           
           {/* Favorites Section */}
           {!isSearching && (
              <div className="space-y-1">
-               <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2 mb-2">Favorites</h3>
+               <div className="flex items-center justify-between px-2 mb-2">
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Favorites</h3>
+               </div>
                {Object.values(state.tools).filter(t => t.isPinned).map(tool => (
                  <div 
                    key={tool.id}
                    className={cn(
-                     "flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors cursor-pointer",
+                     "flex items-center gap-2 px-2 py-2 rounded-md text-sm transition-all cursor-pointer group border border-transparent",
                      state.selectedToolId === tool.id
-                       ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium" 
+                       ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-sm border-sidebar-border/50" 
                        : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
                    )}
                    onClick={() => dispatch({ type: 'SELECT_TOOL', payload: { id: tool.id } })}
                  >
-                   <Star className="w-3.5 h-3.5 fill-yellow-500 text-yellow-500" />
-                   <span className="truncate">{tool.name}</span>
+                   <Star className="w-3.5 h-3.5 fill-yellow-500 text-yellow-500 flex-shrink-0" />
+                   <span className="truncate font-medium">{tool.name}</span>
                  </div>
                ))}
                {Object.values(state.tools).filter(t => t.isPinned).length === 0 && (
-                 <div className="px-2 text-xs text-muted-foreground italic">No pinned tools</div>
+                 <div className="px-2 py-3 text-xs text-muted-foreground italic border border-dashed border-sidebar-border rounded-md text-center bg-sidebar-accent/20">
+                   Star tools to pin them here
+                 </div>
                )}
              </div>
           )}
 
           {/* Categories Tree */}
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <DndContext 
+            sensors={sensors} 
+            collisionDetection={closestCenter} 
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
             <div className="space-y-1">
               {isSearching ? (
                  <div className="space-y-1">
@@ -247,32 +287,39 @@ export function Sidebar() {
                       <div 
                         key={tool.id}
                         className={cn(
-                          "flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors cursor-pointer",
+                          "flex items-center gap-2 px-2 py-2 rounded-md text-sm transition-colors cursor-pointer",
                           state.selectedToolId === tool.id
                             ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium" 
                             : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
                         )}
                         onClick={() => dispatch({ type: 'SELECT_TOOL', payload: { id: tool.id } })}
                       >
-                        <div className="w-3.5 h-3.5" />
-                        <span className="truncate">{tool.name}</span>
+                         <div className="truncate flex-1">
+                          <div className="font-medium">{tool.name}</div>
+                          <div className="text-[10px] text-muted-foreground truncate opacity-80">{tool.whatItIs || tool.summary}</div>
+                        </div>
                       </div>
                    ))}
-                   {filteredTools.length === 0 && <div className="px-2 text-sm text-muted-foreground">No results found.</div>}
+                   {filteredTools.length === 0 && (
+                     <div className="px-2 py-8 text-sm text-muted-foreground text-center">
+                       No results found for "{state.searchQuery}"
+                     </div>
+                   )}
                  </div>
               ) : (
-                <Accordion type="multiple" defaultValue={state.categories.filter(c => !c.collapsed).map(c => c.id)} className="w-full">
+                <Accordion type="multiple" defaultValue={state.categories.filter(c => !c.collapsed).map(c => c.id)} className="w-full space-y-1">
                   {state.categories.map(category => (
-                    <AccordionItem value={category.id} key={category.id} className="border-none mb-1">
-                      <div className="flex items-center group/cat hover:bg-sidebar-accent/30 rounded-md pr-1">
+                    <AccordionItem value={category.id} key={category.id} className="border-none">
+                      <div className="flex items-center group/cat hover:bg-sidebar-accent/30 rounded-md pr-1 transition-colors">
                          <AccordionTrigger 
-                           className="py-1.5 px-2 hover:no-underline hover:bg-transparent flex-1 justify-start gap-2 text-sm font-medium"
+                           className="py-2 px-2 hover:no-underline hover:bg-transparent flex-1 justify-start gap-2 text-sm font-semibold text-sidebar-foreground/80 hover:text-sidebar-foreground"
                          >
-                           <span className="truncate text-left">{category.name}</span>
+                           <span className="truncate text-left flex-1">{category.name}</span>
+                           <span className="text-xs font-normal text-muted-foreground bg-sidebar-accent/50 px-1.5 py-0.5 rounded-full">{category.toolIds.length}</span>
                          </AccordionTrigger>
                          <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover/cat:opacity-100 transition-opacity">
+                              <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover/cat:opacity-100 transition-all focus:opacity-100">
                                 <MoreHorizontal className="w-3 h-3" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -280,23 +327,25 @@ export function Sidebar() {
                               <DropdownMenuItem onClick={() => handleRenameCategory(category.id, category.name)}>
                                 <Edit className="w-3 h-3 mr-2" /> Rename
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => dispatch({ type: 'DELETE_CATEGORY', payload: { id: category.id } })} className="text-destructive focus:text-destructive">
+                              <DropdownMenuItem onClick={() => handleDeleteCategory(category.id)} className="text-destructive focus:text-destructive">
                                 <Trash className="w-3 h-3 mr-2" /> Delete
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                       </div>
                       
-                      <AccordionContent className="pb-1 pt-0 pl-2">
+                      <AccordionContent className="pb-2 pt-0 pl-0">
                         <SortableContext items={category.toolIds} strategy={verticalListSortingStrategy}>
-                          <div className="border-l border-sidebar-border/50 pl-1 ml-2 space-y-0.5 mt-1">
+                          <div className="border-l border-sidebar-border/50 pl-2 ml-3.5 space-y-1 mt-1">
                             {category.toolIds.map(toolId => {
                                const tool = state.tools[toolId];
                                if (!tool) return null;
                                return <SortableToolItem key={tool.id} id={tool.id} tool={tool} isActive={state.selectedToolId === tool.id} />;
                             })}
                             {category.toolIds.length === 0 && (
-                              <div className="px-2 py-2 text-xs text-muted-foreground italic">Empty category</div>
+                              <div className="px-2 py-3 text-xs text-muted-foreground italic border border-dashed border-sidebar-border/50 rounded bg-sidebar-accent/10 ml-1">
+                                Empty category
+                              </div>
                             )}
                           </div>
                         </SortableContext>
@@ -306,17 +355,24 @@ export function Sidebar() {
                 </Accordion>
               )}
             </div>
+            <DragOverlay>
+              {activeId ? (
+                 <div className="bg-popover text-popover-foreground shadow-xl rounded-md p-2 border border-primary/20 opacity-90 w-64">
+                    Dragging Item...
+                 </div>
+              ) : null}
+            </DragOverlay>
           </DndContext>
 
         </div>
       </ScrollArea>
 
-      {/* Footer Actions */}
-      <div className="p-4 border-t border-sidebar-border space-y-2">
-        <Button className="w-full justify-start" variant="outline" onClick={() => setIsAddToolOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" /> New Tool
+      {/* Footer Actions - Sticky */}
+      <div className="p-4 border-t border-sidebar-border space-y-2 bg-sidebar/95 backdrop-blur supports-[backdrop-filter]:bg-sidebar/60 sticky bottom-0 z-10">
+        <Button className="w-full justify-start shadow-sm" variant="outline" onClick={() => setIsAddToolOpen(true)}>
+          <Plus className="w-4 h-4 mr-2" /> New Tool <span className="ml-auto text-xs text-muted-foreground font-mono">⌘N</span>
         </Button>
-        <Button className="w-full justify-start" variant="ghost" onClick={handleAddCategory}>
+        <Button className="w-full justify-start hover:bg-sidebar-accent" variant="ghost" onClick={handleAddCategory}>
           <FolderPlus className="w-4 h-4 mr-2" /> New Category
         </Button>
       </div>
@@ -324,4 +380,19 @@ export function Sidebar() {
       <ToolModal isOpen={isAddToolOpen} onClose={() => setIsAddToolOpen(false)} />
     </div>
   );
+}
+
+export function MobileSidebar() {
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon" className="md:hidden">
+          <Menu className="h-5 w-5" />
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="left" className="p-0 w-80">
+        <Sidebar className="h-full border-none w-full" />
+      </SheetContent>
+    </Sheet>
+  )
 }
