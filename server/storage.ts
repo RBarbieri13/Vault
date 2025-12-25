@@ -1,38 +1,110 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { eq, sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/node-postgres";
+import pg from "pg";
+import * as schema from "@shared/schema";
+import { type Category, type Tool, type InsertCategory, type InsertTool } from "@shared/schema";
 
-// modify the interface with any CRUD methods
-// you might need
+const { Pool } = pg;
 
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  // Categories
+  getAllCategories(): Promise<Category[]>;
+  getCategory(id: string): Promise<Category | undefined>;
+  createCategory(category: InsertCategory): Promise<Category>;
+  updateCategory(id: string, category: Partial<InsertCategory>): Promise<Category | undefined>;
+  deleteCategory(id: string): Promise<boolean>;
+
+  // Tools
+  getAllTools(): Promise<Tool[]>;
+  getTool(id: string): Promise<Tool | undefined>;
+  createTool(tool: InsertTool): Promise<Tool>;
+  updateTool(id: string, tool: Partial<InsertTool>): Promise<Tool | undefined>;
+  deleteTool(id: string): Promise<boolean>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
+export class DatabaseStorage implements IStorage {
+  private db: ReturnType<typeof drizzle>;
 
   constructor() {
-    this.users = new Map();
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+    });
+    this.db = drizzle(pool, { schema });
   }
 
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+  // Categories
+  async getAllCategories(): Promise<Category[]> {
+    return await this.db.select().from(schema.categories);
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  async getCategory(id: string): Promise<Category | undefined> {
+    const [category] = await this.db
+      .select()
+      .from(schema.categories)
+      .where(eq(schema.categories.id, id));
+    return category;
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async createCategory(insertCategory: InsertCategory): Promise<Category> {
+    const [category] = await this.db
+      .insert(schema.categories)
+      .values(insertCategory)
+      .returning();
+    return category;
+  }
+
+  async updateCategory(id: string, updateData: Partial<InsertCategory>): Promise<Category | undefined> {
+    const [category] = await this.db
+      .update(schema.categories)
+      .set(updateData)
+      .where(eq(schema.categories.id, id))
+      .returning();
+    return category;
+  }
+
+  async deleteCategory(id: string): Promise<boolean> {
+    const result = await this.db
+      .delete(schema.categories)
+      .where(eq(schema.categories.id, id));
+    return true;
+  }
+
+  // Tools
+  async getAllTools(): Promise<Tool[]> {
+    return await this.db.select().from(schema.tools);
+  }
+
+  async getTool(id: string): Promise<Tool | undefined> {
+    const [tool] = await this.db
+      .select()
+      .from(schema.tools)
+      .where(eq(schema.tools.id, id));
+    return tool;
+  }
+
+  async createTool(insertTool: InsertTool): Promise<Tool> {
+    const [tool] = await this.db
+      .insert(schema.tools)
+      .values(insertTool)
+      .returning();
+    return tool;
+  }
+
+  async updateTool(id: string, updateData: Partial<InsertTool>): Promise<Tool | undefined> {
+    const [tool] = await this.db
+      .update(schema.tools)
+      .set(updateData)
+      .where(eq(schema.tools.id, id))
+      .returning();
+    return tool;
+  }
+
+  async deleteTool(id: string): Promise<boolean> {
+    const result = await this.db
+      .delete(schema.tools)
+      .where(eq(schema.tools.id, id));
+    return true;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

@@ -31,7 +31,7 @@ interface ToolModalProps {
 }
 
 export function ToolModal({ isOpen, onClose, toolToEdit }: ToolModalProps) {
-  const { state, dispatch } = useApp();
+  const { state, apiMutations } = useApp();
   
   const defaultValues = {
     name: toolToEdit?.name || '',
@@ -69,16 +69,14 @@ export function ToolModal({ isOpen, onClose, toolToEdit }: ToolModalProps) {
     }
   }, [isOpen, toolToEdit, state.categories, reset]);
 
-  const onSubmit = (data: any) => {
+  const onSubmit = async (data: any) => {
     const tagsArray = data.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t.length > 0);
     const capabilitiesArray = data.capabilities.split('\n').map((t: string) => t.trim()).filter((t: string) => t.length > 0);
     const bestForArray = data.bestFor.split('\n').map((t: string) => t.trim()).filter((t: string) => t.length > 0);
     
-    if (toolToEdit) {
-      dispatch({
-        type: 'UPDATE_TOOL',
-        payload: {
-          id: toolToEdit.id,
+    try {
+      if (toolToEdit) {
+        await apiMutations.updateTool(toolToEdit.id, {
           name: data.name,
           url: data.url,
           type: data.type,
@@ -89,12 +87,9 @@ export function ToolModal({ isOpen, onClose, toolToEdit }: ToolModalProps) {
           notes: data.notes,
           tags: tagsArray,
           categoryId: data.categoryId,
-        },
-      });
-    } else {
-      dispatch({
-        type: 'ADD_TOOL',
-        payload: {
+        });
+      } else {
+        await apiMutations.createTool({
           name: data.name,
           url: data.url,
           type: data.type,
@@ -105,10 +100,13 @@ export function ToolModal({ isOpen, onClose, toolToEdit }: ToolModalProps) {
           notes: data.notes,
           tags: tagsArray,
           categoryId: data.categoryId,
-        },
-      });
+          isPinned: false,
+        });
+      }
+      onClose();
+    } catch (error) {
+      console.error('Failed to save tool:', error);
     }
-    onClose();
   };
 
   const selectedCategory = watch('categoryId');

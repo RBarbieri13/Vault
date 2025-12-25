@@ -23,7 +23,7 @@ import { toast } from '@/hooks/use-toast';
 import { useHotkeys } from 'react-hotkeys-hook';
 
 export function Sidebar({ className }: { className?: string }) {
-  const { state, dispatch } = useApp();
+  const { state, dispatch, apiMutations } = useApp();
   const [isAddToolOpen, setIsAddToolOpen] = useState(false);
 
   // Keyboard shortcuts
@@ -61,26 +61,38 @@ export function Sidebar({ className }: { className?: string }) {
     reader.readAsText(file);
   };
 
-  const handleAddCategory = () => {
+  const handleAddCategory = async () => {
     const name = prompt("Enter category name:");
     if (name) {
-      dispatch({ type: 'ADD_CATEGORY', payload: { name } });
-      toast({ title: "Category Added", description: `"${name}" has been created.` });
+      try {
+        await apiMutations.createCategory(name);
+        toast({ title: "Category Added", description: `"${name}" has been created.` });
+      } catch (error) {
+        toast({ variant: "destructive", title: "Error", description: "Failed to create category." });
+      }
     }
   };
 
-  const handleRenameCategory = (id: string, currentName: string) => {
+  const handleRenameCategory = async (id: string, currentName: string) => {
     const name = prompt("Rename category:", currentName);
     if (name) {
-       dispatch({ type: 'RENAME_CATEGORY', payload: { id, name } });
-       toast({ title: "Category Renamed", description: `Renamed to "${name}".` });
+      try {
+        await apiMutations.updateCategory(id, { name });
+        toast({ title: "Category Renamed", description: `Renamed to "${name}".` });
+      } catch (error) {
+        toast({ variant: "destructive", title: "Error", description: "Failed to rename category." });
+      }
     }
   };
 
-  const handleDeleteCategory = (id: string) => {
+  const handleDeleteCategory = async (id: string) => {
     if(confirm("Delete this category and all its tools?")) {
-      dispatch({ type: 'DELETE_CATEGORY', payload: { id } });
-      toast({ title: "Category Deleted", description: "Category and its tools removed." });
+      try {
+        await apiMutations.deleteCategory(id);
+        toast({ title: "Category Deleted", description: "Category and its tools removed." });
+      } catch (error) {
+        toast({ variant: "destructive", title: "Error", description: "Failed to delete category." });
+      }
     }
   }
 

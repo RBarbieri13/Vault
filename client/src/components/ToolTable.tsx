@@ -92,7 +92,7 @@ const getTagColor = (tag: string) => {
 };
 
 export function ToolTable() {
-  const { state, dispatch } = useApp();
+  const { state, dispatch, apiMutations } = useApp();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [editingTool, setEditingTool] = useState<Tool | undefined>(undefined);
@@ -109,10 +109,14 @@ export function ToolTable() {
     );
   }, [state.tools, state.searchQuery]);
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this tool?")) {
-      dispatch({ type: 'DELETE_TOOL', payload: { id } });
-      toast({ title: "Tool Deleted", description: "Tool has been removed from the vault." });
+      try {
+        await apiMutations.deleteTool(id);
+        toast({ title: "Tool Deleted", description: "Tool has been removed from the vault." });
+      } catch (error) {
+        toast({ title: "Error", description: "Failed to delete tool.", variant: "destructive" });
+      }
     }
   };
 
@@ -275,9 +279,13 @@ export function ToolTable() {
                     variant="ghost" 
                     size="icon" 
                     className="h-8 w-8 hover:bg-muted"
-                    onClick={(e) => {
+                    onClick={async (e) => {
                       e.stopPropagation();
-                      dispatch({ type: 'TOGGLE_PIN', payload: { id: tool.id } });
+                      try {
+                        await apiMutations.updateTool(tool.id, { isPinned: !tool.isPinned });
+                      } catch (error) {
+                        console.error('Failed to toggle pin:', error);
+                      }
                     }}
                   >
                     <Star className={`h-4 w-4 ${tool.isPinned ? 'fill-yellow-500 text-yellow-500' : 'text-muted-foreground'}`} />
