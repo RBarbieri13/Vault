@@ -101,6 +101,10 @@ export function ToolModal({ isOpen, onClose, toolToEdit }: ToolModalProps) {
           tags: tagsArray,
           categoryId: data.categoryId,
           isPinned: false,
+          status: 'active',
+          trend: [5, 5, 5, 5, 5, 5, 5],
+          usage: 50,
+          contentType: 'tool',
         });
       }
       onClose();
