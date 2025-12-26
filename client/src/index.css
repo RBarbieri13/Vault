@@ -157,3 +157,197 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+/* Ultra-dense theme utilities */
+@layer utilities {
+  /* Hide scrollbar but allow scrolling */
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Thin scrollbar for data-dense UI */
+  .thin-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+  }
+  .thin-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .thin-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .thin-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.3);
+    border-radius: 3px;
+  }
+  .thin-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(156, 163, 175, 0.5);
+  }
+
+  /* Data-dense typography */
+  .text-dense {
+    font-size: 11px;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+  }
+
+  .text-micro {
+    font-size: 10px;
+    line-height: 1.2;
+    letter-spacing: 0;
+  }
+
+  .text-nano {
+    font-size: 9px;
+    line-height: 1.1;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  /* Tabular numbers for data */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Monospace tree connectors */
+  .tree-connector {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: rgb(148 163 184 / 0.5);
+    user-select: none;
+  }
+
+  /* Row hover state - only show actions on hover */
+  .row-actions {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .group:hover .row-actions,
+  .row-actions:focus-within {
+    opacity: 1;
+  }
+
+  /* Keyboard focus ring */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1;
+  }
+
+  /* Dense grid row */
+  .dense-row {
+    height: 28px;
+    min-height: 28px;
+  }
+
+  /* Bloomberg-style panel contrast */
+  .panel-dark {
+    background-color: #2d3748;
+    color: #e2e8f0;
+  }
+
+  .panel-light {
+    background-color: #ffffff;
+    color: #1a202c;
+  }
+
+  /* Sidebar dark theme overrides - matches reference #1e2530 */
+  .sidebar-dark {
+    --sidebar-bg: #1e2530;
+    --sidebar-text: #e2e8f0;
+    --sidebar-text-muted: #94a3b8;
+    --sidebar-hover: rgba(255, 255, 255, 0.05);
+    --sidebar-active: rgba(255, 255, 255, 0.1);
+    --sidebar-border: rgba(255, 255, 255, 0.08);
+  }
+
+  /* AI Vault specific sidebar styling */
+  .ai-vault-sidebar {
+    background-color: #1e2530;
+  }
+
+  .ai-vault-sidebar .section-header {
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+
+  .ai-vault-sidebar .nav-item {
+    font-size: 11px;
+    color: #cbd5e1;
+    padding: 4px 12px;
+    border-radius: 4px;
+  }
+
+  .ai-vault-sidebar .nav-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .ai-vault-sidebar .nav-item.active {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+  }
+
+  /* Type badge sizes */
+  .badge-sm {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 500;
+  }
+
+  .badge-xs {
+    font-size: 8px;
+    padding: 1px 4px;
+    border-radius: 2px;
+    font-weight: 500;
+  }
+
+  /* Sparkline container */
+  .sparkline-container {
+    display: inline-flex;
+    align-items: center;
+    height: 16px;
+  }
+
+  /* Status bar styling */
+  .status-bar {
+    font-size: 10px;
+    height: 22px;
+    min-height: 22px;
+  }
+
+  /* Toolbar compact */
+  .toolbar-compact {
+    height: 36px;
+    min-height: 36px;
+  }
+
+  /* Filter chip */
+  .filter-chip {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  /* Keyboard shortcut hint */
+  .kbd {
+    font-size: 9px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    background-color: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    font-family: var(--font-mono);
+  }
+
+  .dark .kbd {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}

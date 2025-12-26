@@ -1,51 +1,143 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Sidebar } from '@/components/Sidebar';
-import { ToolTable } from '@/components/ToolTable';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
+import { DataGrid } from '@/components/DataGrid';
+import { Toolbar } from '@/components/Toolbar';
+import { StatusBar } from '@/components/StatusBar';
+import { ToolDetails } from '@/components/ToolDetails';
+import { ToolModal } from '@/components/ToolModal';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { Menu, Loader2 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/lib/store';
+import { useQueryClient } from '@tanstack/react-query';
+import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
+import { toast } from '@/hooks/use-toast';
 
 export default function Home() {
-  const { isLoading } = useApp();
+  const { state, isLoading, dispatch, apiMutations } = useApp();
+  const queryClient = useQueryClient();
+  const [isAddToolOpen, setIsAddToolOpen] = useState(false);
+  const [showDetails, setShowDetails] = useState(true);
+
+  const handleRefresh = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['categories'] });
+    queryClient.invalidateQueries({ queryKey: ['tools'] });
+  }, [queryClient]);
+
+  // Delete handler for keyboard shortcut
+  const handleDeleteTool = useCallback(async () => {
+    if (state.selectedToolId) {
+      const tool = state.tools[state.selectedToolId];
+      if (tool && confirm(`Delete "${tool.name}"?`)) {
+        try {
+          await apiMutations.deleteTool(tool.id);
+          toast({ title: 'Deleted', description: `${tool.name} has been removed.` });
+        } catch (error) {
+          toast({ variant: "destructive", title: "Error", description: "Failed to delete tool." });
+        }
+      }
+    }
+  }, [state.selectedToolId, state.tools, apiMutations]);
+
+  // Initialize keyboard shortcuts
+  useKeyboardShortcuts({
+    onAddTool: () => setIsAddToolOpen(true),
+    onRefresh: handleRefresh,
+    onDeleteTool: handleDeleteTool,
+  });
+
+  const handleSelectTool = useCallback((id: string) => {
+    dispatch({ type: 'SELECT_TOOL', payload: { id } });
+    setShowDetails(true);
+  }, [dispatch]);
+
+  const selectedTool = state.selectedToolId ? state.tools[state.selectedToolId] : null;
 
   if (isLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Loading AI Vault...</p>
+      <div className="flex h-screen w-full items-center justify-center bg-slate-50 dark:bg-slate-900">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+          <p className="text-sm text-slate-500">Loading AI Vault...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background">
+    <div className="flex h-screen w-full overflow-hidden bg-slate-100 dark:bg-slate-950">
       {/* Mobile Sidebar */}
-      <div className="md:hidden absolute top-4 left-4 z-50">
+      <div className="md:hidden absolute top-2 left-2 z-50">
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" size="icon">
+            <Button variant="outline" size="icon" className="h-8 w-8">
               <Menu className="h-4 w-4" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-[280px]">
+          <SheetContent side="left" className="p-0 w-[240px]">
             <Sidebar className="h-full border-none w-full" />
           </SheetContent>
         </Sheet>
       </div>
 
-      {/* Desktop Layout - Fixed Sidebar as requested */}
+      {/* Desktop Layout - Dark Sidebar (fixed width) */}
       <div className="hidden md:flex h-full flex-shrink-0">
-         <Sidebar className="h-full w-[280px]" />
+        <Sidebar className="h-full" />
       </div>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-         <ToolTable />
+      {/* Main Content Area - White Panel */}
+      <main className="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-slate-900">
+        {/* Toolbar with dropdown filters */}
+        <Toolbar
+          onAddTool={() => setIsAddToolOpen(true)}
+          onRefresh={handleRefresh}
+        />
+
+        {/* Content with optional details panel */}
+        <div className="flex-1 flex overflow-hidden">
+          {selectedTool && showDetails ? (
+            <ResizablePanelGroup direction="horizontal" className="flex-1">
+              {/* Data Grid */}
+              <ResizablePanel defaultSize={60} minSize={40}>
+                <DataGrid
+                  onSelectTool={handleSelectTool}
+                  selectedToolId={state.selectedToolId}
+                  className="h-full"
+                />
+              </ResizablePanel>
+
+              {/* Resize Handle */}
+              <ResizableHandle
+                withHandle
+                className="w-[3px] bg-slate-200 dark:bg-slate-700 hover:bg-blue-500 transition-colors"
+              />
+
+              {/* Details Panel */}
+              <ResizablePanel defaultSize={40} minSize={25} maxSize={50}>
+                <div className="h-full overflow-auto bg-slate-50 dark:bg-slate-800/50 border-l border-slate-200 dark:border-slate-700">
+                  <ToolDetails
+                    tool={selectedTool}
+                    onClose={() => setShowDetails(false)}
+                  />
+                </div>
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          ) : (
+            <DataGrid
+              onSelectTool={handleSelectTool}
+              selectedToolId={state.selectedToolId}
+              className="flex-1"
+            />
+          )}
+        </div>
+
+        {/* Status Bar */}
+        <StatusBar />
       </main>
+
+      {/* Add Tool Modal */}
+      <ToolModal isOpen={isAddToolOpen} onClose={() => setIsAddToolOpen(false)} />
     </div>
   );
 }
