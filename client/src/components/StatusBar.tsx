@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '@/lib/store';
 import { cn } from '@/lib/utils';
-import { RefreshCw, Settings } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 
 interface StatusBarProps {
   selectedCount?: number;
@@ -107,16 +107,7 @@ export function StatusBar({ selectedCount = 0, className }: StatusBarProps) {
           )}
         </span>
 
-        <span className="text-slate-600">|</span>
-
         <span className="font-mono text-slate-500">v2.4.1</span>
-
-        <button
-          className="p-0.5 hover:bg-slate-700 rounded"
-          title="Settings"
-        >
-          <Settings className="w-3 h-3" />
-        </button>
       </div>
     </div>
   );

@@ -116,7 +116,6 @@ const columns: Column[] = [
   { id: 'rating', label: 'Rating', width: '56px', align: 'center' },
   { id: 'access', label: 'Access', width: '36px', align: 'center' },
   { id: 'owner', label: 'Owner', width: '32px', align: 'center' },
-  { id: 'modified', label: 'Modified', width: '52px', align: 'center' },
   { id: 'actions', label: '', width: '28px', align: 'center' },
 ];
 
@@ -373,7 +372,7 @@ export function DataGrid({
         className={cn(
           "grid items-center gap-0 px-2 h-[26px] min-h-[26px]",
           "bg-[#252b3b] border-b border-slate-700/50",
-          "text-[9px] font-semibold uppercase tracking-wider text-slate-500"
+          "text-[9px] font-semibold tracking-wider text-slate-500"
         )}
         style={{ gridTemplateColumns }}
       >

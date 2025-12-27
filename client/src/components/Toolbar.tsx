@@ -19,6 +19,7 @@ import {
   Trash2,
   Plus,
   Check,
+  Settings,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -188,7 +189,7 @@ export function Toolbar({
             )}
           >
             <Filter className="w-3 h-3" />
-            Filter
+            Filter +
             {activeFilterCount > 0 && (
               <span className="ml-0.5 text-[8px] px-1 py-0.5 bg-cyan-500 text-white rounded-full">
                 {activeFilterCount}
@@ -339,6 +340,16 @@ export function Toolbar({
           <DropdownMenuItem className="text-[10px]">Print View</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* Settings Button */}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-6 w-6 p-0 text-slate-400 hover:text-slate-200 hover:bg-white/5"
+        title="Settings"
+      >
+        <Settings className="w-3.5 h-3.5" />
+      </Button>
 
       {/* My Filters */}
       <DropdownMenu>

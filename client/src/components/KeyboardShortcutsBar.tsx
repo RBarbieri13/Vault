@@ -11,11 +11,11 @@ const shortcuts: Shortcut[] = [
   { keys: ['⌘', 'N'], label: 'New' },
   { keys: ['⌘', 'E'], label: 'Edit' },
   { keys: ['⌘', 'D'], label: 'Duplicate' },
-  { keys: ['⌘', '⌫'], label: 'Delete' },
+  { keys: ['⌘', 'B'], label: 'Delete' },
   { keys: ['Tab'], label: 'Navigate' },
   { keys: ['Space'], label: 'Select' },
   { keys: ['⌘', 'A'], label: 'Select All' },
-  { keys: ['?'], label: 'Help' },
+  { keys: ['?'], label: '' },
 ];
 
 interface KeyboardShortcutsBarProps {
@@ -33,9 +33,6 @@ export function KeyboardShortcutsBar({ className }: KeyboardShortcutsBarProps) {
     >
       {shortcuts.map((shortcut, index) => (
         <React.Fragment key={index}>
-          {index > 0 && (
-            <span className="text-slate-300 dark:text-slate-600">|</span>
-          )}
           <div className="flex items-center gap-1">
             {shortcut.keys.map((key, i) => (
               <kbd
