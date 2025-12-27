@@ -11,6 +11,7 @@ externalPort = 80
 
 [env]
 PORT = "5000"
+DATABASE_URL = "postgresql://postgres@localhost/vault"
 
 [deployment]
 deploymentTarget = "autoscale"
