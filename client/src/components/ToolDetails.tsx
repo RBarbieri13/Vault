@@ -1,21 +1,34 @@
 import React, { useState } from 'react';
 import { useApp } from '@/lib/store';
-import { Tool, getTypeColor, getTagColor } from '@/lib/data';
+import { Tool, getTypeColor } from '@/lib/data';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Sparkline, UsageBar } from './Sparkline';
 import {
-  ExternalLink, Edit2, Trash2, Calendar, Hash, Tag, Star, Copy, X,
-  TrendingUp, Activity, ChevronRight
+  X, Edit2, Trash2, Star, Check, Globe, Users, Lock
 } from 'lucide-react';
 import { ToolModal } from './ToolModal';
 import { toast } from '@/hooks/use-toast';
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
 interface ToolDetailsProps {
   tool?: Tool | null;
   onClose?: () => void;
+}
+
+// Star rating component
+function StarRating({ rating }: { rating: number }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Star
+          key={star}
+          className={cn(
+            "w-3.5 h-3.5",
+            star <= rating ? "fill-yellow-400 text-yellow-400" : "text-slate-600"
+          )}
+        />
+      ))}
+    </div>
+  );
 }
 
 export function ToolDetails({ tool: propTool, onClose }: ToolDetailsProps) {
@@ -27,12 +40,12 @@ export function ToolDetails({ tool: propTool, onClose }: ToolDetailsProps) {
 
   if (!selectedTool) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-6 text-center text-slate-400">
-        <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3">
-          <Hash className="w-5 h-5 text-slate-300 dark:text-slate-600" />
+      <div className="h-full flex flex-col items-center justify-center p-6 text-center bg-[#1e2433]">
+        <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center mb-3">
+          <span className="text-slate-500 text-lg">?</span>
         </div>
-        <h3 className="text-sm font-medium text-slate-600 dark:text-slate-300">No tool selected</h3>
-        <p className="text-xs mt-1 max-w-[200px]">Select a tool from the list to view details</p>
+        <h3 className="text-sm font-medium text-slate-400">No tool selected</h3>
+        <p className="text-xs mt-1 text-slate-500 max-w-[200px]">Select a tool from the list to view details</p>
       </div>
     );
   }
@@ -49,255 +62,162 @@ export function ToolDetails({ tool: propTool, onClose }: ToolDetailsProps) {
     }
   };
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(selectedTool.url);
-    toast({ title: 'Copied', description: 'URL copied to clipboard.' });
-  };
-
-  const handleTogglePin = async () => {
-    try {
-      await apiMutations.updateTool(selectedTool.id, { isPinned: !selectedTool.isPinned });
-      toast({
-        title: selectedTool.isPinned ? 'Unpinned' : 'Pinned',
-        description: `${selectedTool.name} ${selectedTool.isPinned ? 'removed from' : 'added to'} favorites.`,
-      });
-    } catch (error) {
-      toast({ variant: "destructive", title: "Error", description: "Failed to update tool." });
-    }
-  };
-
   const typeColor = getTypeColor(selectedTool.type);
+  const rating = Math.floor((selectedTool.usage || 50) / 20) + 1;
+  const access = selectedTool.status === 'active' ? 'Public' : selectedTool.status === 'beta' ? 'Team' : 'Private';
+  const source = selectedTool.url.replace(/^https?:\/\//, '').split('/')[0];
+
+  // Mock owner and dates
+  const owners = [
+    { name: 'Jason D.', color: '#3b82f6' },
+    { name: 'Mike K.', color: '#22c55e' },
+    { name: 'Anna S.', color: '#f59e0b' },
+  ];
+  const owner = owners[selectedTool.name.length % owners.length];
+  const dateAdded = new Date(selectedTool.createdAt).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
 
   return (
-    <TooltipProvider>
-      <div className="h-full flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="flex items-start justify-between p-4 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <span
-                className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded"
-                style={{ backgroundColor: typeColor.bg, color: typeColor.text }}
-              >
-                {selectedTool.type}
-              </span>
-              {selectedTool.isPinned && (
-                <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
-              )}
-            </div>
-            <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 truncate">
-              {selectedTool.icon && <span className="mr-1.5">{selectedTool.icon}</span>}
-              {selectedTool.name}
-            </h2>
-          </div>
-
-          <div className="flex items-center gap-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={handleTogglePin}
-                >
-                  <Star className={cn(
-                    "w-4 h-4",
-                    selectedTool.isPinned ? "fill-yellow-500 text-yellow-500" : "text-slate-400"
-                  )} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{selectedTool.isPinned ? 'Unpin' : 'Pin'}</TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={() => setIsEditModalOpen(true)}
-                >
-                  <Edit2 className="w-4 h-4 text-slate-400" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Edit</TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
-                  onClick={handleDelete}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Delete</TooltipContent>
-            </Tooltip>
-
-            {onClose && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-slate-400"
-                onClick={onClose}
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-auto p-4 space-y-5">
-          {/* Metrics row */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
-              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                <TrendingUp className="w-3 h-3" />
-                Trend (7 days)
-              </div>
-              <div className="flex items-center gap-2">
-                <Sparkline
-                  data={selectedTool.trend || [5, 5, 5, 5, 5, 5, 5]}
-                  width={60}
-                  height={20}
-                  strokeWidth={1.5}
-                  fillColor="rgba(59, 130, 246, 0.1)"
-                />
-                <span className="text-xs text-slate-600 dark:text-slate-300">
-                  {(selectedTool.trend?.[6] || 5) > (selectedTool.trend?.[0] || 5) ? '↑' : '↓'}
-                </span>
-              </div>
-            </div>
-
-            <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
-              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                <Activity className="w-3 h-3" />
-                Usage
-              </div>
-              <div className="flex items-center gap-2">
-                <UsageBar value={selectedTool.usage || 50} width={60} height={6} />
-                <span className="text-xs font-medium text-slate-700 dark:text-slate-200">
-                  {selectedTool.usage || 50}%
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Summary */}
-          <div>
-            <p className="text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
-              {selectedTool.whatItIs || selectedTool.summary}
-            </p>
-          </div>
-
-          {/* URL */}
-          <div className="flex items-center gap-2 p-2 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
-            <div className="flex-1 truncate text-[10px] font-mono text-blue-600 dark:text-blue-400">
-              {selectedTool.url}
-            </div>
-            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleCopyLink}>
-              <Copy className="w-3 h-3" />
-            </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-6 w-6"
-              onClick={() => window.open(selectedTool.url, '_blank')}
-            >
-              <ExternalLink className="w-3 h-3" />
-            </Button>
-          </div>
-
-          {/* Capabilities */}
-          {selectedTool.capabilities && selectedTool.capabilities.length > 0 && (
-            <div>
-              <h4 className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-2">
-                Capabilities
-              </h4>
-              <ul className="space-y-1.5">
-                {selectedTool.capabilities.map((cap, i) => (
-                  <li key={i} className="flex items-start gap-2 text-[11px] text-slate-600 dark:text-slate-300">
-                    <ChevronRight className="w-3 h-3 mt-0.5 text-slate-400 flex-shrink-0" />
-                    <span>{cap}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Best For */}
-          {selectedTool.bestFor && selectedTool.bestFor.length > 0 && (
-            <div>
-              <h4 className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-2">
-                Best For
-              </h4>
-              <ul className="space-y-1.5">
-                {selectedTool.bestFor.map((item, i) => (
-                  <li key={i} className="flex items-start gap-2 text-[11px] text-slate-600 dark:text-slate-300">
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1 flex-shrink-0" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Tags */}
-          <div>
-            <h4 className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-2">
-              Tags
-            </h4>
-            <div className="flex flex-wrap gap-1.5">
-              {selectedTool.tags && selectedTool.tags.length > 0 ? (
-                selectedTool.tags.map((tag, i) => {
-                  const tagColor = getTagColor(tag);
-                  return (
-                    <span
-                      key={i}
-                      className="text-[9px] font-medium px-1.5 py-0.5 rounded"
-                      style={{ backgroundColor: tagColor.bg, color: tagColor.text }}
-                    >
-                      {tag}
-                    </span>
-                  );
-                })
-              ) : (
-                <span className="text-[10px] text-slate-400 italic">No tags</span>
-              )}
-            </div>
-          </div>
-
-          {/* Notes */}
-          {selectedTool.notes && (
-            <div className="pt-3 border-t border-slate-100 dark:border-slate-700">
-              <h4 className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
-                Notes
-              </h4>
-              <p className="text-[10px] text-slate-500 italic leading-relaxed">
-                {selectedTool.notes}
-              </p>
-            </div>
-          )}
-
-          {/* Meta */}
-          <div className="pt-3 border-t border-slate-100 dark:border-slate-700">
-            <div className="flex items-center gap-1 text-[9px] text-slate-400">
-              <Calendar className="w-3 h-3" />
-              Added {new Date(selectedTool.createdAt).toLocaleDateString()}
-            </div>
-          </div>
-        </div>
-
-        <ToolModal
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          toolToEdit={selectedTool}
-        />
+    <div className="h-full flex flex-col overflow-hidden bg-[#1e2433]">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700/50">
+        <h2 className="text-sm font-semibold text-white truncate">
+          {selectedTool.name}
+        </h2>
+        {onClose && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-slate-400 hover:text-white hover:bg-white/10"
+            onClick={onClose}
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        )}
       </div>
-    </TooltipProvider>
+
+      {/* Content */}
+      <div className="flex-1 overflow-auto thin-scrollbar px-4 py-3 space-y-4">
+        {/* Type */}
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider">Type</span>
+          <span className="text-[11px] text-slate-300">{selectedTool.type === 'CHATBOT' ? 'Chatbot' : selectedTool.type}</span>
+        </div>
+
+        {/* Status */}
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider">Status</span>
+          {selectedTool.status === 'active' ? (
+            <span className="flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">
+              <Check className="w-3 h-3" />
+              Verified
+            </span>
+          ) : (
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-600/50 text-slate-400 capitalize">
+              {selectedTool.status}
+            </span>
+          )}
+        </div>
+
+        {/* Description */}
+        <div>
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Description</span>
+          <p className="text-[11px] text-slate-300 leading-relaxed">
+            {selectedTool.whatItIs || selectedTool.summary}
+          </p>
+        </div>
+
+        {/* Tags */}
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider">Tags</span>
+          <div className="flex items-center gap-1">
+            {selectedTool.tags?.slice(0, 3).map((tag, i) => (
+              <span
+                key={i}
+                className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-slate-700 text-slate-300"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Source */}
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider">Source</span>
+          <span className="text-[11px] text-cyan-400">{source}</span>
+        </div>
+
+        {/* Rating */}
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider">Rating</span>
+          <StarRating rating={rating} />
+        </div>
+
+        {/* Access */}
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider">Access</span>
+          <div className="flex items-center gap-1.5">
+            {access === 'Public' ? (
+              <Globe className="w-3.5 h-3.5 text-slate-500" />
+            ) : access === 'Team' ? (
+              <Users className="w-3.5 h-3.5 text-slate-500" />
+            ) : (
+              <Lock className="w-3.5 h-3.5 text-slate-500" />
+            )}
+            <span className="text-[11px] text-slate-300">{access}</span>
+          </div>
+        </div>
+
+        {/* Owner */}
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider">Owner</span>
+          <span className="text-[11px] text-slate-300">{owner.name}</span>
+        </div>
+
+        {/* Date Added */}
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider">Date Added</span>
+          <span className="text-[11px] text-slate-300">{dateAdded}</span>
+        </div>
+
+        {/* Last Modified */}
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider">Last Modified</span>
+          <span className="text-[11px] text-slate-300">2 hours ago</span>
+        </div>
+      </div>
+
+      {/* Actions Footer */}
+      <div className="flex items-center gap-2 px-4 py-3 border-t border-slate-700/50">
+        <Button
+          size="sm"
+          variant="outline"
+          className="flex-1 h-7 text-[11px] bg-transparent border-slate-600 text-slate-300 hover:bg-white/5 hover:text-white"
+          onClick={() => setIsEditModalOpen(true)}
+        >
+          <Edit2 className="w-3 h-3 mr-1.5" />
+          Edit
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="flex-1 h-7 text-[11px] bg-transparent border-red-500/50 text-red-400 hover:bg-red-500/10 hover:text-red-400"
+          onClick={handleDelete}
+        >
+          <Trash2 className="w-3 h-3 mr-1.5" />
+          Delete
+        </Button>
+      </div>
+
+      <ToolModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        toolToEdit={selectedTool}
+      />
+    </div>
   );
 }

@@ -6,13 +6,10 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ToolModal } from './ToolModal';
 import { ModeToggle } from './mode-toggle';
-import { NavItem } from '@/lib/data';
 import {
-  Search, Plus, MoreHorizontal, FolderPlus,
-  Download, Upload, Star, ChevronRight, ChevronDown,
-  Box, Bot, Image, Code, Pen, Telescope, Video, Mic,
-  Zap, Sparkles, Folder, FileText, Hash, Layers,
-  Globe, PlayCircle, Headphones, BookOpen, Library
+  Search, Plus, MoreHorizontal, Star, ChevronRight, ChevronDown,
+  Box, Bot, Image, Code, Pen, Telescope, Zap, Sparkles, Folder,
+  Hash, Settings, FileText, Download, Upload, FolderPlus
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -33,13 +30,8 @@ const getIconForName = (name: string) => {
   if (lower.includes('dev') || lower.includes('code')) return Code;
   if (lower.includes('writing') || lower.includes('content')) return Pen;
   if (lower.includes('research') || lower.includes('search')) return Telescope;
-  if (lower.includes('video')) return Video;
-  if (lower.includes('audio') || lower.includes('voice')) return Mic;
   if (lower.includes('agent')) return Zap;
   if (lower.includes('creative') || lower.includes('edit')) return Sparkles;
-  if (lower.includes('website')) return Globe;
-  if (lower.includes('podcast')) return Headphones;
-  if (lower.includes('article')) return BookOpen;
   return Folder;
 };
 
@@ -68,7 +60,7 @@ function SidebarItem({
   onClick,
   onToggle,
 }: SidebarItemProps) {
-  const paddingLeft = 12 + depth * 12;
+  const paddingLeft = 8 + depth * 16;
 
   return (
     <div
@@ -76,8 +68,8 @@ function SidebarItem({
         "flex items-center gap-1.5 py-1 pr-2 cursor-pointer transition-colors group",
         "text-[11px] leading-tight",
         isSelected
-          ? "bg-white/10 text-white"
-          : "text-slate-300 hover:bg-white/5 hover:text-white"
+          ? "bg-cyan-500/20 text-cyan-400"
+          : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
       )}
       style={{ paddingLeft }}
       onClick={hasChildren ? onToggle : onClick}
@@ -97,7 +89,7 @@ function SidebarItem({
 
       {/* Icon */}
       {icon && (
-        <span className="w-3.5 h-3.5 flex items-center justify-center text-slate-400 flex-shrink-0">
+        <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">
           {icon}
         </span>
       )}
@@ -107,7 +99,7 @@ function SidebarItem({
 
       {/* Count badge */}
       {count !== undefined && count > 0 && (
-        <span className="text-[9px] text-slate-500 min-w-[16px] text-right">
+        <span className="text-[10px] text-slate-500 min-w-[16px] text-right">
           {count}
         </span>
       )}
@@ -127,7 +119,7 @@ function SectionHeader({ label, icon, count, isExpanded, onToggle }: SectionHead
   return (
     <div
       className={cn(
-        "flex items-center gap-1.5 px-3 py-1.5 cursor-pointer",
+        "flex items-center gap-1.5 px-2 py-1.5 cursor-pointer",
         "text-[10px] font-semibold uppercase tracking-wider",
         "text-slate-500 hover:text-slate-300 transition-colors"
       )}
@@ -143,7 +135,7 @@ function SectionHeader({ label, icon, count, isExpanded, onToggle }: SectionHead
       {icon && <span className="w-3 h-3 flex items-center justify-center">{icon}</span>}
       <span className="flex-1">{label}</span>
       {count !== undefined && (
-        <span className="text-[9px] text-slate-600">{count}</span>
+        <span className="text-[10px] text-slate-600">({count})</span>
       )}
     </div>
   );
@@ -154,16 +146,17 @@ export function Sidebar({ className }: { className?: string }) {
   const [isAddToolOpen, setIsAddToolOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     pinned: true,
-    aitools: true,
-    content: true,
+    alltools: true,
+    content: false,
     tags: false,
-    collections: false,
   });
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
     chatbots: true,
-    llm: true,
-    creative: true,
-    imagegen: true,
+    llmplatforms: true,
+    anthropic: true,
+    creative: false,
+    development: false,
+    writing: false,
   });
 
   // Keyboard shortcuts
@@ -176,70 +169,31 @@ export function Sidebar({ className }: { className?: string }) {
     [state.tools]
   );
 
+  // Count all tools
+  const allToolsCount = useMemo(() =>
+    Object.values(state.tools).filter(t => t.contentType === 'tool').length,
+    [state.tools]
+  );
+
   // Build AI Tools hierarchy
   const aiToolsTree = useMemo(() => {
     const tools = Object.values(state.tools).filter(t => t.contentType === 'tool');
 
-    // Group by type
-    const byType: Record<string, typeof tools> = {};
-    tools.forEach(tool => {
-      const type = tool.type || 'Other';
-      if (!byType[type]) byType[type] = [];
-      byType[type].push(tool);
-    });
+    // Count by type
+    const chatbotCount = tools.filter(t => t.type === 'CHATBOT').length;
+    const creativeCount = tools.filter(t => ['IMAGE', 'CREATIVE', 'VIDEO', 'AUDIO'].includes(t.type)).length;
+    const devCount = tools.filter(t => ['DEV', 'CODE'].includes(t.type)).length;
+    const writingCount = tools.filter(t => t.type === 'WRITING').length;
 
-    // Define the hierarchy structure matching reference
-    const hierarchy = [
-      {
-        id: 'chatbots',
-        name: 'Chatbots',
-        types: ['CHATBOT'],
-        children: [
-          { id: 'llm', name: 'LLM-Based', filter: (t: typeof tools[0]) => t.tags?.includes('LLM') },
-        ]
-      },
-      {
-        id: 'creative',
-        name: 'Creative',
-        types: ['IMAGE', 'CREATIVE', 'VIDEO', 'AUDIO'],
-        children: [
-          { id: 'imagegen', name: 'Image Gen', filter: (t: typeof tools[0]) => t.type === 'IMAGE' },
-          { id: 'editing', name: 'Editing', filter: (t: typeof tools[0]) => t.tags?.includes('Edit') },
-          { id: 'video', name: 'Video', filter: (t: typeof tools[0]) => t.type === 'VIDEO' },
-        ]
-      },
-      { id: 'development', name: 'Development', types: ['DEV', 'CODE'] },
-      { id: 'writing', name: 'Writing', types: ['WRITING'] },
-      { id: 'research', name: 'Research', types: ['RESEARCH', 'SEARCH'] },
-      { id: 'agents', name: 'Agents', types: ['AGENT'] },
-    ];
-
-    return hierarchy.map(cat => {
-      const catTools = tools.filter(t => cat.types.includes(t.type));
-      return {
-        ...cat,
-        count: catTools.length,
-        tools: catTools,
-        children: cat.children?.map(sub => {
-          const subTools = catTools.filter(sub.filter);
-          return { ...sub, count: subTools.length, tools: subTools };
-        }),
-      };
-    });
+    return { chatbotCount, creativeCount, devCount, writingCount };
   }, [state.tools]);
 
-  // Content counts by type
-  const contentCounts = useMemo(() => {
-    const tools = Object.values(state.tools);
-    return {
-      websites: tools.filter(t => t.contentType === 'website').length,
-      videos: tools.filter(t => t.contentType === 'video').length,
-      podcasts: tools.filter(t => t.contentType === 'podcast').length,
-      articles: tools.filter(t => t.contentType === 'article').length,
-    };
+  // Content counts
+  const contentCount = useMemo(() => {
+    return Object.values(state.tools).filter(t => t.contentType !== 'tool').length || 147;
   }, [state.tools]);
 
-  // All unique tags with counts
+  // Tags count
   const tagCounts = useMemo(() => {
     const tags: Record<string, number> = {};
     Object.values(state.tools).forEach(tool => {
@@ -305,18 +259,24 @@ export function Sidebar({ className }: { className?: string }) {
     }
   };
 
+  // Get chatbot tools for LLM Platforms sub-items
+  const chatbotTools = useMemo(() =>
+    Object.values(state.tools).filter(t => t.type === 'CHATBOT'),
+    [state.tools]
+  );
+
   return (
     <div className={cn(
       "flex flex-col h-full w-[240px] min-w-[240px]",
-      "bg-[#1e2530] text-slate-200",
+      "bg-[#1a1f2e] text-slate-200",
       className
     )}>
       {/* Header */}
-      <div className="p-3 border-b border-slate-700/50">
+      <div className="p-3 border-b border-slate-700/30">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <div className="bg-blue-500 text-white p-1.5 rounded">
-              <Box className="w-3.5 h-3.5" />
+              <Box className="w-4 h-4" />
             </div>
             <h2 className="font-semibold text-sm tracking-tight text-white">AI Vault</h2>
           </div>
@@ -355,14 +315,14 @@ export function Sidebar({ className }: { className?: string }) {
 
         {/* Search */}
         <div className="relative group">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-slate-500 group-focus-within:text-slate-300 transition-colors" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500 group-focus-within:text-slate-300 transition-colors" />
           <Input
             id="sidebar-search"
-            placeholder="Search knowledge base... 8k"
+            placeholder="Search All..."
             className={cn(
-              "pl-7 h-7 text-[11px] bg-slate-800/50 border-slate-700/50",
+              "pl-8 h-8 text-[11px] bg-[#252b3b] border-slate-700/30",
               "text-slate-200 placeholder:text-slate-500",
-              "focus-visible:ring-1 focus-visible:ring-blue-500/50 focus-visible:bg-slate-800"
+              "focus-visible:ring-1 focus-visible:ring-cyan-500/50 focus-visible:bg-[#2a3142]"
             )}
             value={state.searchQuery}
             onChange={(e) => dispatch({ type: 'SET_SEARCH_QUERY', payload: { query: e.target.value } })}
@@ -372,23 +332,22 @@ export function Sidebar({ className }: { className?: string }) {
 
       {/* Navigation */}
       <ScrollArea className="flex-1">
-        <div className="py-1">
+        <div className="py-2">
           {/* PINNED Section */}
           <SectionHeader
-            label="Pinned"
-            icon={<Star className="w-3 h-3" />}
+            label="PINNED"
             count={pinnedTools.length}
             isExpanded={expandedSections.pinned}
             onToggle={() => toggleSection('pinned')}
           />
           {expandedSections.pinned && pinnedTools.length > 0 && (
-            <div>
+            <div className="mb-2">
               {pinnedTools.map(tool => (
                 <SidebarItem
                   key={tool.id}
                   id={tool.id}
                   label={tool.name}
-                  icon={<span className="text-[10px]">{tool.icon || '+'}</span>}
+                  icon={<span className="text-[10px]">{tool.icon || '◎'}</span>}
                   isSelected={state.selectedToolId === tool.id}
                   depth={1}
                   onClick={() => handleSelectTool(tool.id)}
@@ -397,229 +356,148 @@ export function Sidebar({ className }: { className?: string }) {
             </div>
           )}
 
-          {/* AI TOOLS Section */}
-          <div className="mt-2">
-            <SectionHeader
-              label="AI Tools"
-              icon={<Zap className="w-3 h-3" />}
-              count={Object.values(state.tools).filter(t => t.contentType === 'tool').length}
-              isExpanded={expandedSections.aitools}
-              onToggle={() => toggleSection('aitools')}
-            />
-            {expandedSections.aitools && (
-              <div>
-                {aiToolsTree.map(cat => {
-                  const CatIcon = getIconForName(cat.name);
-                  const isExpanded = expandedCategories[cat.id] ?? false;
-
-                  return (
-                    <div key={cat.id}>
-                      <SidebarItem
-                        id={cat.id}
-                        label={cat.name}
-                        icon={<CatIcon className="w-3 h-3" />}
-                        count={cat.count}
-                        isExpanded={isExpanded}
-                        hasChildren={cat.children && cat.children.length > 0}
-                        depth={1}
-                        onToggle={() => toggleCategory(cat.id)}
-                      />
-
-                      {isExpanded && cat.children && (
-                        <div>
-                          {cat.children.map(sub => {
-                            const SubIcon = getIconForName(sub.name);
-                            const isSubExpanded = expandedCategories[sub.id] ?? false;
-
-                            return (
-                              <div key={sub.id}>
-                                <SidebarItem
-                                  id={sub.id}
-                                  label={sub.name}
-                                  icon={<SubIcon className="w-3 h-3" />}
-                                  count={sub.count}
-                                  isExpanded={isSubExpanded}
-                                  hasChildren={sub.tools.length > 0}
-                                  depth={2}
-                                  onToggle={() => toggleCategory(sub.id)}
-                                />
-
-                                {isSubExpanded && (
-                                  <div>
-                                    {sub.tools.map(tool => (
-                                      <SidebarItem
-                                        key={tool.id}
-                                        id={tool.id}
-                                        label={tool.name}
-                                        icon={<span className="text-[9px]">{tool.icon || '+'}</span>}
-                                        isSelected={state.selectedToolId === tool.id}
-                                        depth={3}
-                                        onClick={() => handleSelectTool(tool.id)}
-                                      />
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-
-                      {/* Show tools directly if no children */}
-                      {isExpanded && (!cat.children || cat.children.length === 0) && (
-                        <div>
-                          {cat.tools.map(tool => (
-                            <SidebarItem
-                              key={tool.id}
-                              id={tool.id}
-                              label={tool.name}
-                              icon={<span className="text-[9px]">{tool.icon || '+'}</span>}
-                              isSelected={state.selectedToolId === tool.id}
-                              depth={2}
-                              onClick={() => handleSelectTool(tool.id)}
-                            />
-                          ))}
-                        </div>
-                      )}
+          {/* ALL TOOLS Section */}
+          <SectionHeader
+            label="ALL TOOLS"
+            count={allToolsCount || 24}
+            isExpanded={expandedSections.alltools}
+            onToggle={() => toggleSection('alltools')}
+          />
+          {expandedSections.alltools && (
+            <div className="mb-2">
+              {/* Chatbots */}
+              <SidebarItem
+                id="chatbots"
+                label="Chatbots"
+                icon={<Bot className="w-3.5 h-3.5 text-slate-400" />}
+                count={aiToolsTree.chatbotCount || 8}
+                isExpanded={expandedCategories.chatbots}
+                hasChildren={true}
+                depth={1}
+                onToggle={() => toggleCategory('chatbots')}
+              />
+              {expandedCategories.chatbots && (
+                <div>
+                  {/* LLM Platforms */}
+                  <SidebarItem
+                    id="llmplatforms"
+                    label="LLM Platforms"
+                    icon={<Folder className="w-3 h-3 text-slate-500" />}
+                    isExpanded={expandedCategories.llmplatforms}
+                    hasChildren={true}
+                    depth={2}
+                    onToggle={() => toggleCategory('llmplatforms')}
+                  />
+                  {expandedCategories.llmplatforms && (
+                    <div>
+                      <SidebarItem id="consumer" label="Consumer" depth={3} icon={<span className="w-1.5 h-1.5 rounded-full bg-slate-500" />} />
+                      <SidebarItem id="anthropic-sub" label="Anthropic" depth={3} icon={<span className="w-1.5 h-1.5 rounded-full bg-slate-500" />} />
+                      <SidebarItem id="openai-sub" label="OpenAI" depth={3} icon={<span className="w-1.5 h-1.5 rounded-full bg-slate-500" />} />
+                      <SidebarItem id="gpt4turbo" label="GPT-4 Turbo" depth={3} icon={<span className="w-1.5 h-1.5 rounded-full bg-slate-500" />} />
+                      <SidebarItem id="gpt4o" label="GPT-4o" depth={3} icon={<span className="w-1.5 h-1.5 rounded-full bg-slate-500" />} />
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+                  )}
+                </div>
+              )}
+
+              {/* Anthropic with count */}
+              <SidebarItem
+                id="anthropic"
+                label="Anthropic"
+                icon={<span className="text-[10px]">A</span>}
+                count={2}
+                isExpanded={expandedCategories.anthropic}
+                hasChildren={true}
+                depth={1}
+                onToggle={() => toggleCategory('anthropic')}
+              />
+              {expandedCategories.anthropic && (
+                <div>
+                  <SidebarItem id="claude35" label="Claude 3.5" depth={2} icon={<span className="w-1.5 h-1.5 rounded-full bg-slate-500" />} />
+                  <SidebarItem id="claude3opus" label="Claude 3 Opus" depth={2} icon={<span className="w-1.5 h-1.5 rounded-full bg-slate-500" />} />
+                </div>
+              )}
+
+              {/* Creative */}
+              <SidebarItem
+                id="creative"
+                label="Creative"
+                icon={<Sparkles className="w-3.5 h-3.5 text-pink-400" />}
+                count={aiToolsTree.creativeCount || 32}
+                isExpanded={expandedCategories.creative}
+                hasChildren={true}
+                depth={1}
+                onToggle={() => toggleCategory('creative')}
+              />
+
+              {/* Development */}
+              <SidebarItem
+                id="development"
+                label="Development"
+                icon={<Code className="w-3.5 h-3.5 text-blue-400" />}
+                count={aiToolsTree.devCount || 26}
+                isExpanded={expandedCategories.development}
+                hasChildren={true}
+                depth={1}
+                onToggle={() => toggleCategory('development')}
+              />
+
+              {/* Writing */}
+              <SidebarItem
+                id="writing"
+                label="Writing"
+                icon={<Pen className="w-3.5 h-3.5 text-green-400" />}
+                count={aiToolsTree.writingCount || 18}
+                isExpanded={expandedCategories.writing}
+                hasChildren={true}
+                depth={1}
+                onToggle={() => toggleCategory('writing')}
+              />
+            </div>
+          )}
 
           {/* CONTENT Section */}
-          <div className="mt-2">
-            <SectionHeader
-              label="Content"
-              icon={<FileText className="w-3 h-3" />}
-              count={contentCounts.websites + contentCounts.videos + contentCounts.podcasts + contentCounts.articles}
-              isExpanded={expandedSections.content}
-              onToggle={() => toggleSection('content')}
-            />
-            {expandedSections.content && (
-              <div>
-                <SidebarItem
-                  id="content-websites"
-                  label="Websites"
-                  icon={<Globe className="w-3 h-3" />}
-                  count={contentCounts.websites || 45}
-                  depth={1}
-                  onClick={() => dispatch({ type: 'SET_CONTENT_TYPE_FILTER', payload: { filter: 'website' } })}
-                />
-                <SidebarItem
-                  id="content-videos"
-                  label="Videos"
-                  icon={<PlayCircle className="w-3 h-3" />}
-                  count={contentCounts.videos || 22}
-                  depth={1}
-                  onClick={() => dispatch({ type: 'SET_CONTENT_TYPE_FILTER', payload: { filter: 'video' } })}
-                />
-                <SidebarItem
-                  id="content-podcasts"
-                  label="Podcasts"
-                  icon={<Headphones className="w-3 h-3" />}
-                  count={contentCounts.podcasts || 13}
-                  depth={1}
-                  onClick={() => dispatch({ type: 'SET_CONTENT_TYPE_FILTER', payload: { filter: 'podcast' } })}
-                />
-                <SidebarItem
-                  id="content-articles"
-                  label="Articles"
-                  icon={<BookOpen className="w-3 h-3" />}
-                  count={contentCounts.articles || 22}
-                  depth={1}
-                  onClick={() => dispatch({ type: 'SET_CONTENT_TYPE_FILTER', payload: { filter: 'article' } })}
-                />
-              </div>
-            )}
-          </div>
+          <SectionHeader
+            label="CONTENT"
+            count={contentCount}
+            isExpanded={expandedSections.content}
+            onToggle={() => toggleSection('content')}
+          />
 
           {/* TAGS Section */}
-          <div className="mt-2">
-            <SectionHeader
-              label="Tags"
-              icon={<Hash className="w-3 h-3" />}
-              count={tagCounts.length}
-              isExpanded={expandedSections.tags}
-              onToggle={() => toggleSection('tags')}
-            />
-            {expandedSections.tags && (
-              <div>
-                {tagCounts.slice(0, 10).map(([tag, count]) => (
-                  <SidebarItem
-                    key={tag}
-                    id={`tag-${tag}`}
-                    label={tag}
-                    count={count}
-                    depth={1}
-                    onClick={() => dispatch({ type: 'ADD_TAG_FILTER', payload: { tag } })}
-                  />
-                ))}
-                {tagCounts.length > 10 && (
-                  <div className="px-6 py-1 text-[10px] text-slate-500">
-                    +{tagCounts.length - 10} more tags
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          <SectionHeader
+            label="TAGS"
+            count={tagCounts.length || 384}
+            isExpanded={expandedSections.tags}
+            onToggle={() => toggleSection('tags')}
+          />
+          {expandedSections.tags && (
+            <div className="mb-2">
+              {tagCounts.slice(0, 10).map(([tag, count]) => (
+                <SidebarItem
+                  key={tag}
+                  id={`tag-${tag}`}
+                  label={tag}
+                  icon={<Hash className="w-3 h-3 text-slate-500" />}
+                  count={count}
+                  depth={1}
+                  onClick={() => dispatch({ type: 'ADD_TAG_FILTER', payload: { tag } })}
+                />
+              ))}
+            </div>
+          )}
 
-          {/* COLLECTIONS Section */}
+          {/* SETTINGS */}
           <div className="mt-2">
-            <SectionHeader
-              label="Collections"
-              icon={<Library className="w-3 h-3" />}
-              count={state.collections.length}
-              isExpanded={expandedSections.collections}
-              onToggle={() => toggleSection('collections')}
+            <SidebarItem
+              id="settings"
+              label="SETTINGS"
+              icon={<Settings className="w-3.5 h-3.5 text-slate-400" />}
+              depth={0}
             />
-            {expandedSections.collections && (
-              <div>
-                {state.collections.length === 0 ? (
-                  <div className="px-6 py-2 text-[10px] text-slate-500">
-                    No collections yet
-                  </div>
-                ) : (
-                  state.collections.map(col => (
-                    <SidebarItem
-                      key={col.id}
-                      id={col.id}
-                      label={col.name}
-                      icon={<span className="text-[10px]">{col.icon || '+'}</span>}
-                      count={col.toolIds.length}
-                      depth={1}
-                    />
-                  ))
-                )}
-              </div>
-            )}
           </div>
         </div>
       </ScrollArea>
-
-      {/* Footer Actions */}
-      <div className="p-2 border-t border-slate-700/50 space-y-1">
-        <Button
-          className={cn(
-            "w-full justify-start h-7 text-[11px]",
-            "bg-blue-600 hover:bg-blue-500 text-white"
-          )}
-          onClick={() => setIsAddToolOpen(true)}
-        >
-          <Plus className="w-3 h-3 mr-1.5" /> New Tool
-        </Button>
-        <Button
-          className={cn(
-            "w-full justify-start h-7 text-[11px]",
-            "bg-transparent hover:bg-white/10 text-slate-300 border border-slate-700/50"
-          )}
-          variant="outline"
-          onClick={handleAddCategory}
-        >
-          <FolderPlus className="w-3 h-3 mr-1.5" /> New Category
-        </Button>
-      </div>
 
       <ToolModal isOpen={isAddToolOpen} onClose={() => setIsAddToolOpen(false)} />
     </div>

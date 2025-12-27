@@ -56,26 +56,26 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-slate-50 dark:bg-slate-900">
+      <div className="flex h-screen w-full items-center justify-center bg-[#1a1f2e]">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
-          <p className="text-sm text-slate-500">Loading AI Vault...</p>
+          <Loader2 className="h-6 w-6 animate-spin text-cyan-500" />
+          <p className="text-sm text-slate-400">Loading AI Vault...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-slate-100 dark:bg-slate-950">
+    <div className="flex h-screen w-full overflow-hidden bg-[#161b26]">
       {/* Mobile Sidebar */}
       <div className="md:hidden absolute top-2 left-2 z-50">
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" size="icon" className="h-8 w-8">
-              <Menu className="h-4 w-4" />
+            <Button variant="outline" size="icon" className="h-8 w-8 bg-[#1a1f2e] border-slate-700">
+              <Menu className="h-4 w-4 text-slate-300" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-[240px]">
+          <SheetContent side="left" className="p-0 w-[240px] bg-[#1a1f2e] border-slate-700">
             <Sidebar className="h-full border-none w-full" />
           </SheetContent>
         </Sheet>
@@ -86,8 +86,8 @@ export default function Home() {
         <Sidebar className="h-full" />
       </div>
 
-      {/* Main Content Area - White Panel */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-slate-900">
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col h-full overflow-hidden bg-[#1e2433]">
         {/* Toolbar with dropdown filters */}
         <Toolbar
           onAddTool={() => setIsAddToolOpen(true)}
@@ -99,7 +99,7 @@ export default function Home() {
           {selectedTool && showDetails ? (
             <ResizablePanelGroup direction="horizontal" className="flex-1">
               {/* Data Grid */}
-              <ResizablePanel defaultSize={60} minSize={40}>
+              <ResizablePanel defaultSize={70} minSize={50}>
                 <DataGrid
                   onSelectTool={handleSelectTool}
                   selectedToolId={state.selectedToolId}
@@ -110,12 +110,12 @@ export default function Home() {
               {/* Resize Handle */}
               <ResizableHandle
                 withHandle
-                className="w-[3px] bg-slate-200 dark:bg-slate-700 hover:bg-blue-500 transition-colors"
+                className="w-[3px] bg-slate-700/50 hover:bg-cyan-500 transition-colors"
               />
 
               {/* Details Panel */}
-              <ResizablePanel defaultSize={40} minSize={25} maxSize={50}>
-                <div className="h-full overflow-auto bg-slate-50 dark:bg-slate-800/50 border-l border-slate-200 dark:border-slate-700">
+              <ResizablePanel defaultSize={30} minSize={20} maxSize={40}>
+                <div className="h-full overflow-auto bg-[#1e2433] border-l border-slate-700/50">
                   <ToolDetails
                     tool={selectedTool}
                     onClose={() => setShowDetails(false)}

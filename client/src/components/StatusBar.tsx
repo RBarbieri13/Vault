@@ -37,31 +37,70 @@ export function StatusBar({ className }: StatusBarProps) {
   };
 
   const toolCount = Object.keys(state.tools).length;
+  const selectedCount = 3; // Mock selected count
+  const activeFilter = state.typeFilter !== 'all' ? `Type=${state.typeFilter}` : null;
 
   return (
     <div className={cn(
-      "flex items-center justify-center gap-2 px-4 h-[24px] min-h-[24px]",
-      "bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700",
-      "text-[10px] text-slate-500 dark:text-slate-400",
+      "flex items-center justify-between px-3 h-[28px] min-h-[28px]",
+      "bg-[#1a1f2e] border-t border-slate-700/50",
+      "text-[10px] text-slate-400",
       className
     )}>
-      {/* Tool count */}
-      <span className="font-medium">{toolCount} tools</span>
+      {/* Left side - Keyboard shortcuts */}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1">
+          <kbd className="px-1 py-0.5 bg-slate-700/50 rounded text-[9px] font-mono text-slate-300">⌘K</kbd>
+          <span>Search</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <kbd className="px-1 py-0.5 bg-slate-700/50 rounded text-[9px] font-mono text-slate-300">⌘N</kbd>
+          <span>New</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <kbd className="px-1 py-0.5 bg-slate-700/50 rounded text-[9px] font-mono text-slate-300">⌘E</kbd>
+          <span>Edit</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <kbd className="px-1 py-0.5 bg-slate-700/50 rounded text-[9px] font-mono text-slate-300">⌘D</kbd>
+          <span>Duplicate</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <kbd className="px-1 py-0.5 bg-slate-700/50 rounded text-[9px] font-mono text-slate-300">⌘⌫</kbd>
+          <span>Delete</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <kbd className="px-1 py-0.5 bg-slate-700/50 rounded text-[9px] font-mono text-slate-300">Tab</kbd>
+          <span>Navigate</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <kbd className="px-1 py-0.5 bg-slate-700/50 rounded text-[9px] font-mono text-slate-300">Space</kbd>
+          <span>Select</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <kbd className="px-1 py-0.5 bg-slate-700/50 rounded text-[9px] font-mono text-slate-300">⌘A</kbd>
+          <span>Select All</span>
+        </div>
+      </div>
 
-      <span className="text-slate-300 dark:text-slate-600">-</span>
-
-      {/* Sync status */}
-      <span>
-        {isLoading ? 'Syncing...' : `Synced ${formatRelativeTime(lastSync)}`}
-      </span>
-
-      <span className="text-slate-300 dark:text-slate-600">-</span>
-
-      {/* Keyboard shortcuts hint */}
-      <span>
-        <kbd className="px-1 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-[9px] font-mono">⌘?</kbd>
-        {' '}for shortcuts
-      </span>
+      {/* Right side - Status info */}
+      <div className="flex items-center gap-2">
+        <span className="font-medium">{toolCount} items</span>
+        <span className="text-slate-600">|</span>
+        <span>{selectedCount} selected</span>
+        {activeFilter && (
+          <>
+            <span className="text-slate-600">|</span>
+            <span>Filters: {activeFilter}</span>
+          </>
+        )}
+        <span className="text-slate-600">|</span>
+        <span>
+          {isLoading ? 'Syncing...' : `Last sync: ${formatRelativeTime(lastSync)}`}
+        </span>
+        <span className="text-slate-600">|</span>
+        <span className="text-slate-500">v2.4.1</span>
+      </div>
     </div>
   );
 }
