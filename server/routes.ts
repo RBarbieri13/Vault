@@ -1,16 +1,53 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCategorySchema, insertToolSchema } from "@shared/schema";
+import { insertCategorySchema, insertToolSchema, insertCollectionSchema } from "@shared/schema";
 import { fromError } from "zod-validation-error";
+
+// Structured logging for API calls
+const logApi = (method: string, path: string, status: number, duration: number, details?: string) => {
+  const timestamp = new Date().toISOString();
+  const message = `[${timestamp}] ${method} ${path} ${status} ${duration}ms`;
+  if (status >= 400) {
+    console.error(message, details ? `- ${details}` : '');
+  } else {
+    console.log(message, details ? `- ${details}` : '');
+  }
+};
+
+// Middleware for timing API calls
+const withTiming = (handler: (req: any, res: any) => Promise<void>) => {
+  return async (req: any, res: any) => {
+    const start = Date.now();
+    const originalJson = res.json.bind(res);
+    const originalSend = res.send.bind(res);
+
+    res.json = (data: any) => {
+      const duration = Date.now() - start;
+      logApi(req.method, req.path, res.statusCode, duration);
+      return originalJson(data);
+    };
+
+    res.send = (data: any) => {
+      const duration = Date.now() - start;
+      logApi(req.method, req.path, res.statusCode, duration);
+      return originalSend(data);
+    };
+
+    await handler(req, res);
+  };
+};
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  
-  // Category routes
-  app.get("/api/categories", async (req, res) => {
+
+  // ============================================
+  // CATEGORY ROUTES
+  // ============================================
+
+  app.get("/api/categories", withTiming(async (req, res) => {
     try {
       const categories = await storage.getAllCategories();
       res.json(categories);
@@ -18,9 +55,22 @@ export async function registerRoutes(
       console.error("Error fetching categories:", error);
       res.status(500).json({ error: "Failed to fetch categories" });
     }
-  });
+  }));
 
-  app.post("/api/categories", async (req, res) => {
+  app.get("/api/categories/:id", withTiming(async (req, res) => {
+    try {
+      const category = await storage.getCategory(req.params.id);
+      if (!category) {
+        return res.status(404).json({ error: "Category not found" });
+      }
+      res.json(category);
+    } catch (error) {
+      console.error("Error fetching category:", error);
+      res.status(500).json({ error: "Failed to fetch category" });
+    }
+  }));
+
+  app.post("/api/categories", withTiming(async (req, res) => {
     try {
       const parsed = insertCategorySchema.safeParse(req.body);
       if (!parsed.success) {
@@ -32,9 +82,9 @@ export async function registerRoutes(
       console.error("Error creating category:", error);
       res.status(500).json({ error: "Failed to create category" });
     }
-  });
+  }));
 
-  app.patch("/api/categories/:id", async (req, res) => {
+  app.patch("/api/categories/:id", withTiming(async (req, res) => {
     try {
       const category = await storage.updateCategory(req.params.id, req.body);
       if (!category) {
@@ -45,9 +95,9 @@ export async function registerRoutes(
       console.error("Error updating category:", error);
       res.status(500).json({ error: "Failed to update category" });
     }
-  });
+  }));
 
-  app.delete("/api/categories/:id", async (req, res) => {
+  app.delete("/api/categories/:id", withTiming(async (req, res) => {
     try {
       await storage.deleteCategory(req.params.id);
       res.status(204).send();
@@ -55,10 +105,13 @@ export async function registerRoutes(
       console.error("Error deleting category:", error);
       res.status(500).json({ error: "Failed to delete category" });
     }
-  });
+  }));
 
-  // Tool routes
-  app.get("/api/tools", async (req, res) => {
+  // ============================================
+  // TOOL ROUTES
+  // ============================================
+
+  app.get("/api/tools", withTiming(async (req, res) => {
     try {
       const tools = await storage.getAllTools();
       res.json(tools);
@@ -66,9 +119,22 @@ export async function registerRoutes(
       console.error("Error fetching tools:", error);
       res.status(500).json({ error: "Failed to fetch tools" });
     }
-  });
+  }));
 
-  app.post("/api/tools", async (req, res) => {
+  app.get("/api/tools/:id", withTiming(async (req, res) => {
+    try {
+      const tool = await storage.getTool(req.params.id);
+      if (!tool) {
+        return res.status(404).json({ error: "Tool not found" });
+      }
+      res.json(tool);
+    } catch (error) {
+      console.error("Error fetching tool:", error);
+      res.status(500).json({ error: "Failed to fetch tool" });
+    }
+  }));
+
+  app.post("/api/tools", withTiming(async (req, res) => {
     try {
       const parsed = insertToolSchema.safeParse(req.body);
       if (!parsed.success) {
@@ -80,9 +146,9 @@ export async function registerRoutes(
       console.error("Error creating tool:", error);
       res.status(500).json({ error: "Failed to create tool" });
     }
-  });
+  }));
 
-  app.patch("/api/tools/:id", async (req, res) => {
+  app.patch("/api/tools/:id", withTiming(async (req, res) => {
     try {
       const tool = await storage.updateTool(req.params.id, req.body);
       if (!tool) {
@@ -93,9 +159,9 @@ export async function registerRoutes(
       console.error("Error updating tool:", error);
       res.status(500).json({ error: "Failed to update tool" });
     }
-  });
+  }));
 
-  app.delete("/api/tools/:id", async (req, res) => {
+  app.delete("/api/tools/:id", withTiming(async (req, res) => {
     try {
       await storage.deleteTool(req.params.id);
       res.status(204).send();
@@ -103,7 +169,99 @@ export async function registerRoutes(
       console.error("Error deleting tool:", error);
       res.status(500).json({ error: "Failed to delete tool" });
     }
-  });
+  }));
+
+  // ============================================
+  // COLLECTION ROUTES
+  // ============================================
+
+  app.get("/api/collections", withTiming(async (req, res) => {
+    try {
+      const collections = await storage.getAllCollections();
+      res.json(collections);
+    } catch (error) {
+      console.error("Error fetching collections:", error);
+      res.status(500).json({ error: "Failed to fetch collections" });
+    }
+  }));
+
+  app.get("/api/collections/:id", withTiming(async (req, res) => {
+    try {
+      const collection = await storage.getCollection(req.params.id);
+      if (!collection) {
+        return res.status(404).json({ error: "Collection not found" });
+      }
+      res.json(collection);
+    } catch (error) {
+      console.error("Error fetching collection:", error);
+      res.status(500).json({ error: "Failed to fetch collection" });
+    }
+  }));
+
+  app.post("/api/collections", withTiming(async (req, res) => {
+    try {
+      const parsed = insertCollectionSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: fromError(parsed.error).toString() });
+      }
+      const collection = await storage.createCollection(parsed.data);
+      res.status(201).json(collection);
+    } catch (error) {
+      console.error("Error creating collection:", error);
+      res.status(500).json({ error: "Failed to create collection" });
+    }
+  }));
+
+  app.patch("/api/collections/:id", withTiming(async (req, res) => {
+    try {
+      const collection = await storage.updateCollection(req.params.id, req.body);
+      if (!collection) {
+        return res.status(404).json({ error: "Collection not found" });
+      }
+      res.json(collection);
+    } catch (error) {
+      console.error("Error updating collection:", error);
+      res.status(500).json({ error: "Failed to update collection" });
+    }
+  }));
+
+  app.delete("/api/collections/:id", withTiming(async (req, res) => {
+    try {
+      await storage.deleteCollection(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting collection:", error);
+      res.status(500).json({ error: "Failed to delete collection" });
+    }
+  }));
+
+  // Add tool to collection
+  app.post("/api/collections/:id/tools/:toolId", withTiming(async (req, res) => {
+    try {
+      const collection = await storage.addToolToCollection(req.params.id, req.params.toolId);
+      if (!collection) {
+        return res.status(404).json({ error: "Collection not found" });
+      }
+      res.json(collection);
+    } catch (error) {
+      console.error("Error adding tool to collection:", error);
+      res.status(500).json({ error: "Failed to add tool to collection" });
+    }
+  }));
+
+  // Remove tool from collection
+  app.delete("/api/collections/:id/tools/:toolId", withTiming(async (req, res) => {
+    try {
+      const collection = await storage.removeToolFromCollection(req.params.id, req.params.toolId);
+      if (!collection) {
+        return res.status(404).json({ error: "Collection not found" });
+      }
+      res.json(collection);
+    } catch (error) {
+      console.error("Error removing tool from collection:", error);
+      res.status(500).json({ error: "Failed to remove tool from collection" });
+    }
+  }));
 
   return httpServer;
 }

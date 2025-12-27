@@ -2,7 +2,10 @@ import { eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import * as schema from "@shared/schema";
-import { type Category, type Tool, type InsertCategory, type InsertTool } from "@shared/schema";
+import {
+  type Category, type Tool, type Collection,
+  type InsertCategory, type InsertTool, type InsertCollection
+} from "@shared/schema";
 
 const { Pool } = pg;
 
@@ -20,6 +23,15 @@ export interface IStorage {
   createTool(tool: InsertTool): Promise<Tool>;
   updateTool(id: string, tool: Partial<InsertTool>): Promise<Tool | undefined>;
   deleteTool(id: string): Promise<boolean>;
+
+  // Collections
+  getAllCollections(): Promise<Collection[]>;
+  getCollection(id: string): Promise<Collection | undefined>;
+  createCollection(collection: InsertCollection): Promise<Collection>;
+  updateCollection(id: string, collection: Partial<InsertCollection>): Promise<Collection | undefined>;
+  deleteCollection(id: string): Promise<boolean>;
+  addToolToCollection(collectionId: string, toolId: string): Promise<Collection | undefined>;
+  removeToolFromCollection(collectionId: string, toolId: string): Promise<Collection | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -32,7 +44,10 @@ export class DatabaseStorage implements IStorage {
     this.db = drizzle(pool, { schema });
   }
 
-  // Categories
+  // ============================================
+  // CATEGORIES
+  // ============================================
+
   async getAllCategories(): Promise<Category[]> {
     return await this.db.select().from(schema.categories);
   }
@@ -63,13 +78,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteCategory(id: string): Promise<boolean> {
-    const result = await this.db
+    await this.db
       .delete(schema.categories)
       .where(eq(schema.categories.id, id));
     return true;
   }
 
-  // Tools
+  // ============================================
+  // TOOLS
+  // ============================================
+
   async getAllTools(): Promise<Tool[]> {
     return await this.db.select().from(schema.tools);
   }
@@ -100,10 +118,81 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteTool(id: string): Promise<boolean> {
-    const result = await this.db
+    await this.db
       .delete(schema.tools)
       .where(eq(schema.tools.id, id));
     return true;
+  }
+
+  // ============================================
+  // COLLECTIONS
+  // ============================================
+
+  async getAllCollections(): Promise<Collection[]> {
+    return await this.db.select().from(schema.collections);
+  }
+
+  async getCollection(id: string): Promise<Collection | undefined> {
+    const [collection] = await this.db
+      .select()
+      .from(schema.collections)
+      .where(eq(schema.collections.id, id));
+    return collection;
+  }
+
+  async createCollection(insertCollection: InsertCollection): Promise<Collection> {
+    const [collection] = await this.db
+      .insert(schema.collections)
+      .values(insertCollection)
+      .returning();
+    return collection;
+  }
+
+  async updateCollection(id: string, updateData: Partial<InsertCollection>): Promise<Collection | undefined> {
+    const [collection] = await this.db
+      .update(schema.collections)
+      .set(updateData)
+      .where(eq(schema.collections.id, id))
+      .returning();
+    return collection;
+  }
+
+  async deleteCollection(id: string): Promise<boolean> {
+    await this.db
+      .delete(schema.collections)
+      .where(eq(schema.collections.id, id));
+    return true;
+  }
+
+  async addToolToCollection(collectionId: string, toolId: string): Promise<Collection | undefined> {
+    const collection = await this.getCollection(collectionId);
+    if (!collection) return undefined;
+
+    const toolIds = [...(collection.toolIds || [])];
+    if (!toolIds.includes(toolId)) {
+      toolIds.push(toolId);
+    }
+
+    const [updated] = await this.db
+      .update(schema.collections)
+      .set({ toolIds })
+      .where(eq(schema.collections.id, collectionId))
+      .returning();
+    return updated;
+  }
+
+  async removeToolFromCollection(collectionId: string, toolId: string): Promise<Collection | undefined> {
+    const collection = await this.getCollection(collectionId);
+    if (!collection) return undefined;
+
+    const toolIds = (collection.toolIds || []).filter(id => id !== toolId);
+
+    const [updated] = await this.db
+      .update(schema.collections)
+      .set({ toolIds })
+      .where(eq(schema.collections.id, collectionId))
+      .returning();
+    return updated;
   }
 }
 

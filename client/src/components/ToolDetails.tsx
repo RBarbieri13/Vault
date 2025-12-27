@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { useApp } from '@/lib/store';
-import { Tool, getTypeColor, getTagColor } from '@/lib/data';
+import { Tool, getTypeColor, getTagColor, statusColors } from '@/lib/data';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Sparkline, UsageBar } from './Sparkline';
 import {
-  ExternalLink, Edit2, Trash2, Calendar, Hash, Tag, Star, Copy, X,
-  TrendingUp, Activity, ChevronRight
+  ExternalLink, Edit2, Trash2, Calendar, Hash, Star, Copy, X,
+  TrendingUp, Activity, ChevronRight, Globe, Users, Link2
 } from 'lucide-react';
 import { ToolModal } from './ToolModal';
 import { toast } from '@/hooks/use-toast';
@@ -18,11 +17,68 @@ interface ToolDetailsProps {
   onClose?: () => void;
 }
 
+// Get owner info based on tool
+const getOwner = (tool: Tool) => {
+  const hash = tool.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const names = ['Jason D.', 'Alice S.', 'Mike K.', 'Sarah L.', 'Tom B.', 'Emma W.'];
+  return names[hash % names.length];
+};
+
+// Get access label
+const getAccessLabel = (tool: Tool) => {
+  if (tool.isPinned) return 'Public';
+  if (tool.tags?.includes('Ent') || tool.tags?.includes('Int')) return 'Team';
+  return 'Public';
+};
+
+// Get status display
+const getStatusDisplay = (status: string) => {
+  switch (status) {
+    case 'active': return { icon: '✓', label: 'Verified', color: '#10b981' };
+    case 'beta': return { icon: '●', label: 'Modified', color: '#f59e0b' };
+    case 'deprecated': return { icon: '⚠', label: 'Outdated', color: '#ef4444' };
+    case 'inactive': return { icon: '○', label: 'Archived', color: '#6b7280' };
+    default: return { icon: '●', label: 'Synced', color: '#10b981' };
+  }
+};
+
+// Get source domain from URL
+const getSourceDomain = (url: string): string => {
+  try {
+    return new URL(url).hostname.replace('www.', '');
+  } catch {
+    return url;
+  }
+};
+
+// Format date
+const formatDate = (date: Date | number | string): string => {
+  return new Date(date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+};
+
+// Format relative time
+const formatRelativeTime = (date: Date | number | string): string => {
+  const d = new Date(date);
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffHours < 1) return 'just now';
+  if (diffHours < 24) return `${diffHours} hours ago`;
+  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+  return `${Math.floor(diffDays / 30)} months ago`;
+};
+
 export function ToolDetails({ tool: propTool, onClose }: ToolDetailsProps) {
-  const { state, dispatch, apiMutations } = useApp();
+  const { state, apiMutations } = useApp();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  // Use provided tool or fall back to selected tool from state
   const selectedTool = propTool || (state.selectedToolId ? state.tools[state.selectedToolId] : null);
 
   if (!selectedTool) {
@@ -43,7 +99,7 @@ export function ToolDetails({ tool: propTool, onClose }: ToolDetailsProps) {
         await apiMutations.deleteTool(selectedTool.id);
         toast({ title: 'Deleted', description: `${selectedTool.name} has been removed.` });
         onClose?.();
-      } catch (error) {
+      } catch {
         toast({ variant: "destructive", title: "Error", description: "Failed to delete tool." });
       }
     }
@@ -61,235 +117,186 @@ export function ToolDetails({ tool: propTool, onClose }: ToolDetailsProps) {
         title: selectedTool.isPinned ? 'Unpinned' : 'Pinned',
         description: `${selectedTool.name} ${selectedTool.isPinned ? 'removed from' : 'added to'} favorites.`,
       });
-    } catch (error) {
+    } catch {
       toast({ variant: "destructive", title: "Error", description: "Failed to update tool." });
     }
   };
 
   const typeColor = getTypeColor(selectedTool.type);
+  const statusDisplay = getStatusDisplay(selectedTool.status);
+  const statusColor = statusColors[selectedTool.status] || { bg: '#f1f5f9', text: '#475569' };
 
   return (
     <TooltipProvider>
-      <div className="h-full flex flex-col overflow-hidden">
+      <div className="h-full flex flex-col overflow-hidden bg-white dark:bg-slate-900">
         {/* Header */}
-        <div className="flex items-start justify-between p-4 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
+        <div className="flex items-start justify-between p-3 border-b border-slate-200 dark:border-slate-700">
+          <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate flex items-center gap-1.5">
+            {selectedTool.icon && <span>{selectedTool.icon}</span>}
+            {selectedTool.name}
+          </h2>
+          {onClose && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-slate-400 hover:text-slate-600"
+              onClick={onClose}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+
+        {/* Content - Compact Field List */}
+        <div className="flex-1 overflow-auto p-3">
+          <div className="space-y-3">
+            {/* Type */}
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider">Type</span>
               <span
-                className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded"
+                className="text-[9px] font-semibold px-1.5 py-0.5 rounded uppercase"
                 style={{ backgroundColor: typeColor.bg, color: typeColor.text }}
               >
                 {selectedTool.type}
               </span>
-              {selectedTool.isPinned && (
-                <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
-              )}
             </div>
-            <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 truncate">
-              {selectedTool.icon && <span className="mr-1.5">{selectedTool.icon}</span>}
-              {selectedTool.name}
-            </h2>
-          </div>
 
-          <div className="flex items-center gap-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={handleTogglePin}
-                >
-                  <Star className={cn(
-                    "w-4 h-4",
-                    selectedTool.isPinned ? "fill-yellow-500 text-yellow-500" : "text-slate-400"
-                  )} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{selectedTool.isPinned ? 'Unpin' : 'Pin'}</TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={() => setIsEditModalOpen(true)}
-                >
-                  <Edit2 className="w-4 h-4 text-slate-400" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Edit</TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
-                  onClick={handleDelete}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Delete</TooltipContent>
-            </Tooltip>
-
-            {onClose && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-slate-400"
-                onClick={onClose}
+            {/* Status */}
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider">Status</span>
+              <span
+                className="text-[9px] font-medium px-1.5 py-0.5 rounded flex items-center gap-1"
+                style={{ backgroundColor: statusColor.bg, color: statusColor.text }}
               >
-                <X className="w-4 h-4" />
-              </Button>
-            )}
+                <span>{statusDisplay.icon}</span>
+                {statusDisplay.label}
+              </span>
+            </div>
+
+            {/* Description */}
+            <div>
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Description</span>
+              <p className="text-[10px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                {selectedTool.whatItIs || selectedTool.summary}
+              </p>
+            </div>
+
+            {/* Tags */}
+            <div>
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Tags</span>
+              <div className="text-[10px] text-slate-600 dark:text-slate-300">
+                {selectedTool.tags?.join(', ') || 'No tags'}
+              </div>
+            </div>
+
+            {/* Source */}
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider">Source</span>
+              <a
+                href={selectedTool.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] text-blue-600 dark:text-blue-400 flex items-center gap-1 hover:underline"
+              >
+                <Link2 className="w-3 h-3" />
+                {getSourceDomain(selectedTool.url)}
+              </a>
+            </div>
+
+            {/* Rating */}
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider">Rating</span>
+              <span className="text-[10px] text-yellow-500">
+                {'★'.repeat(Math.min(5, Math.ceil((selectedTool.usage || 50) / 20)))}
+                {'☆'.repeat(5 - Math.min(5, Math.ceil((selectedTool.usage || 50) / 20)))}
+              </span>
+            </div>
+
+            {/* Access */}
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider">Access</span>
+              <span className="text-[10px] text-slate-600 dark:text-slate-300 flex items-center gap-1">
+                <Globe className="w-3 h-3 text-green-500" />
+                {getAccessLabel(selectedTool)}
+              </span>
+            </div>
+
+            {/* Owner */}
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider">Owner</span>
+              <span className="text-[10px] text-slate-600 dark:text-slate-300">
+                {getOwner(selectedTool)}
+              </span>
+            </div>
+
+            {/* Date Added */}
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider">Date Added</span>
+              <span className="text-[10px] text-slate-600 dark:text-slate-300">
+                {formatDate(selectedTool.createdAt)}
+              </span>
+            </div>
+
+            {/* Last Modified */}
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider">Last Modified</span>
+              <span className="text-[10px] text-slate-600 dark:text-slate-300">
+                {formatRelativeTime(selectedTool.createdAt)}
+              </span>
+            </div>
+
+            {/* Trend & Usage */}
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-700">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="p-2 rounded bg-slate-50 dark:bg-slate-800/50">
+                  <div className="text-[9px] text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <TrendingUp className="w-2.5 h-2.5" />
+                    Trend
+                  </div>
+                  <Sparkline
+                    data={selectedTool.trend || [5, 5, 5, 5, 5, 5, 5]}
+                    width={60}
+                    height={16}
+                    strokeWidth={1}
+                  />
+                </div>
+                <div className="p-2 rounded bg-slate-50 dark:bg-slate-800/50">
+                  <div className="text-[9px] text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <Activity className="w-2.5 h-2.5" />
+                    Usage
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <UsageBar value={selectedTool.usage || 50} width={40} height={4} />
+                    <span className="text-[9px] font-medium text-slate-600 dark:text-slate-300">
+                      {selectedTool.usage || 50}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-auto p-4 space-y-5">
-          {/* Metrics row */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
-              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                <TrendingUp className="w-3 h-3" />
-                Trend (7 days)
-              </div>
-              <div className="flex items-center gap-2">
-                <Sparkline
-                  data={selectedTool.trend || [5, 5, 5, 5, 5, 5, 5]}
-                  width={60}
-                  height={20}
-                  strokeWidth={1.5}
-                  fillColor="rgba(59, 130, 246, 0.1)"
-                />
-                <span className="text-xs text-slate-600 dark:text-slate-300">
-                  {(selectedTool.trend?.[6] || 5) > (selectedTool.trend?.[0] || 5) ? '↑' : '↓'}
-                </span>
-              </div>
-            </div>
-
-            <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
-              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                <Activity className="w-3 h-3" />
-                Usage
-              </div>
-              <div className="flex items-center gap-2">
-                <UsageBar value={selectedTool.usage || 50} width={60} height={6} />
-                <span className="text-xs font-medium text-slate-700 dark:text-slate-200">
-                  {selectedTool.usage || 50}%
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Summary */}
-          <div>
-            <p className="text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
-              {selectedTool.whatItIs || selectedTool.summary}
-            </p>
-          </div>
-
-          {/* URL */}
-          <div className="flex items-center gap-2 p-2 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
-            <div className="flex-1 truncate text-[10px] font-mono text-blue-600 dark:text-blue-400">
-              {selectedTool.url}
-            </div>
-            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleCopyLink}>
-              <Copy className="w-3 h-3" />
-            </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-6 w-6"
-              onClick={() => window.open(selectedTool.url, '_blank')}
-            >
-              <ExternalLink className="w-3 h-3" />
-            </Button>
-          </div>
-
-          {/* Capabilities */}
-          {selectedTool.capabilities && selectedTool.capabilities.length > 0 && (
-            <div>
-              <h4 className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-2">
-                Capabilities
-              </h4>
-              <ul className="space-y-1.5">
-                {selectedTool.capabilities.map((cap, i) => (
-                  <li key={i} className="flex items-start gap-2 text-[11px] text-slate-600 dark:text-slate-300">
-                    <ChevronRight className="w-3 h-3 mt-0.5 text-slate-400 flex-shrink-0" />
-                    <span>{cap}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Best For */}
-          {selectedTool.bestFor && selectedTool.bestFor.length > 0 && (
-            <div>
-              <h4 className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-2">
-                Best For
-              </h4>
-              <ul className="space-y-1.5">
-                {selectedTool.bestFor.map((item, i) => (
-                  <li key={i} className="flex items-start gap-2 text-[11px] text-slate-600 dark:text-slate-300">
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1 flex-shrink-0" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Tags */}
-          <div>
-            <h4 className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-2">
-              Tags
-            </h4>
-            <div className="flex flex-wrap gap-1.5">
-              {selectedTool.tags && selectedTool.tags.length > 0 ? (
-                selectedTool.tags.map((tag, i) => {
-                  const tagColor = getTagColor(tag);
-                  return (
-                    <span
-                      key={i}
-                      className="text-[9px] font-medium px-1.5 py-0.5 rounded"
-                      style={{ backgroundColor: tagColor.bg, color: tagColor.text }}
-                    >
-                      {tag}
-                    </span>
-                  );
-                })
-              ) : (
-                <span className="text-[10px] text-slate-400 italic">No tags</span>
-              )}
-            </div>
-          </div>
-
-          {/* Notes */}
-          {selectedTool.notes && (
-            <div className="pt-3 border-t border-slate-100 dark:border-slate-700">
-              <h4 className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
-                Notes
-              </h4>
-              <p className="text-[10px] text-slate-500 italic leading-relaxed">
-                {selectedTool.notes}
-              </p>
-            </div>
-          )}
-
-          {/* Meta */}
-          <div className="pt-3 border-t border-slate-100 dark:border-slate-700">
-            <div className="flex items-center gap-1 text-[9px] text-slate-400">
-              <Calendar className="w-3 h-3" />
-              Added {new Date(selectedTool.createdAt).toLocaleDateString()}
-            </div>
-          </div>
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2 p-3 border-t border-slate-200 dark:border-slate-700">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 h-7 text-[10px]"
+            onClick={() => setIsEditModalOpen(true)}
+          >
+            <Edit2 className="w-3 h-3 mr-1.5" />
+            Edit
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 h-7 text-[10px] text-red-500 hover:text-red-600 border-red-200 hover:border-red-300 hover:bg-red-50"
+            onClick={handleDelete}
+          >
+            <Trash2 className="w-3 h-3 mr-1.5" />
+            Delete
+          </Button>
         </div>
 
         <ToolModal

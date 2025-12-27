@@ -5,6 +5,8 @@ import { Toolbar } from '@/components/Toolbar';
 import { StatusBar } from '@/components/StatusBar';
 import { ToolDetails } from '@/components/ToolDetails';
 import { ToolModal } from '@/components/ToolModal';
+import { Breadcrumb, defaultBreadcrumb } from '@/components/Breadcrumb';
+import { KeyboardShortcutsBar } from '@/components/KeyboardShortcutsBar';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { Menu, Loader2 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -19,6 +21,8 @@ export default function Home() {
   const queryClient = useQueryClient();
   const [isAddToolOpen, setIsAddToolOpen] = useState(false);
   const [showDetails, setShowDetails] = useState(true);
+  const [viewMode, setViewMode] = useState<'table' | 'grid' | 'list'>('table');
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 
   const handleRefresh = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['categories'] });
@@ -33,12 +37,29 @@ export default function Home() {
         try {
           await apiMutations.deleteTool(tool.id);
           toast({ title: 'Deleted', description: `${tool.name} has been removed.` });
-        } catch (error) {
+        } catch {
           toast({ variant: "destructive", title: "Error", description: "Failed to delete tool." });
         }
       }
     }
   }, [state.selectedToolId, state.tools, apiMutations]);
+
+  // Delete selected rows
+  const handleDeleteSelected = useCallback(async () => {
+    if (selectedRows.size === 0) return;
+    if (!confirm(`Delete ${selectedRows.size} selected items?`)) return;
+
+    try {
+      const ids = Array.from(selectedRows);
+      for (const id of ids) {
+        await apiMutations.deleteTool(id);
+      }
+      setSelectedRows(new Set());
+      toast({ title: 'Deleted', description: `${selectedRows.size} items have been removed.` });
+    } catch {
+      toast({ variant: "destructive", title: "Error", description: "Failed to delete some tools." });
+    }
+  }, [selectedRows, apiMutations]);
 
   // Initialize keyboard shortcuts
   useKeyboardShortcuts({
@@ -88,10 +109,17 @@ export default function Home() {
 
       {/* Main Content Area - White Panel */}
       <main className="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-slate-900">
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb items={defaultBreadcrumb} />
+
         {/* Toolbar with dropdown filters */}
         <Toolbar
           onAddTool={() => setIsAddToolOpen(true)}
           onRefresh={handleRefresh}
+          onDeleteSelected={handleDeleteSelected}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          selectedCount={selectedRows.size}
         />
 
         {/* Content with optional details panel */}
@@ -103,6 +131,8 @@ export default function Home() {
                 <DataGrid
                   onSelectTool={handleSelectTool}
                   selectedToolId={state.selectedToolId}
+                  selectedRows={selectedRows}
+                  onSelectionChange={setSelectedRows}
                   className="h-full"
                 />
               </ResizablePanel>
@@ -127,13 +157,18 @@ export default function Home() {
             <DataGrid
               onSelectTool={handleSelectTool}
               selectedToolId={state.selectedToolId}
+              selectedRows={selectedRows}
+              onSelectionChange={setSelectedRows}
               className="flex-1"
             />
           )}
         </div>
 
+        {/* Keyboard Shortcuts Bar */}
+        <KeyboardShortcutsBar />
+
         {/* Status Bar */}
-        <StatusBar />
+        <StatusBar selectedCount={selectedRows.size} />
       </main>
 
       {/* Add Tool Modal */}

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '@/lib/store';
 import { cn } from '@/lib/utils';
+import { RefreshCw, Settings } from 'lucide-react';
 
 interface StatusBarProps {
+  selectedCount?: number;
   className?: string;
 }
 
-export function StatusBar({ className }: StatusBarProps) {
+export function StatusBar({ selectedCount = 0, className }: StatusBarProps) {
   const { state, isLoading } = useApp();
   const [lastSync, setLastSync] = useState<Date>(new Date());
   const [, setTick] = useState(0);
@@ -38,30 +40,84 @@ export function StatusBar({ className }: StatusBarProps) {
 
   const toolCount = Object.keys(state.tools).length;
 
+  // Build active filter description
+  const getFilterDescription = () => {
+    const parts: string[] = [];
+    if (state.typeFilter !== 'all') {
+      parts.push(`Type=${state.typeFilter}`);
+    }
+    if (state.statusFilter !== 'all') {
+      parts.push(`Status=${state.statusFilter}`);
+    }
+    if (state.tagFilters.length > 0) {
+      parts.push(`Tags=${state.tagFilters.join(',')}`);
+    }
+    if (state.dateFilter !== 'all') {
+      parts.push(`Date=${state.dateFilter}`);
+    }
+    return parts.length > 0 ? `Filters: ${parts.join(', ')}` : null;
+  };
+
+  const filterDescription = getFilterDescription();
+
   return (
     <div className={cn(
-      "flex items-center justify-center gap-2 px-4 h-[24px] min-h-[24px]",
+      "flex items-center justify-between gap-4 px-4 h-[22px] min-h-[22px]",
       "bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700",
       "text-[10px] text-slate-500 dark:text-slate-400",
       className
     )}>
-      {/* Tool count */}
-      <span className="font-medium">{toolCount} tools</span>
+      {/* Left side - counts and filters */}
+      <div className="flex items-center gap-3">
+        <span className="font-medium tabular-nums">
+          {toolCount} items
+        </span>
 
-      <span className="text-slate-300 dark:text-slate-600">-</span>
+        {selectedCount > 0 && (
+          <>
+            <span className="text-slate-300 dark:text-slate-600">|</span>
+            <span className="text-blue-600 dark:text-blue-400 font-medium">
+              {selectedCount} selected
+            </span>
+          </>
+        )}
 
-      {/* Sync status */}
-      <span>
-        {isLoading ? 'Syncing...' : `Synced ${formatRelativeTime(lastSync)}`}
-      </span>
+        {filterDescription && (
+          <>
+            <span className="text-slate-300 dark:text-slate-600">|</span>
+            <span className="text-slate-400">
+              {filterDescription}
+            </span>
+          </>
+        )}
+      </div>
 
-      <span className="text-slate-300 dark:text-slate-600">-</span>
+      {/* Right side - sync status and version */}
+      <div className="flex items-center gap-3">
+        <span className="flex items-center gap-1">
+          {isLoading ? (
+            <>
+              <RefreshCw className="w-3 h-3 animate-spin" />
+              Syncing...
+            </>
+          ) : (
+            <>
+              Last sync: {formatRelativeTime(lastSync)}
+            </>
+          )}
+        </span>
 
-      {/* Keyboard shortcuts hint */}
-      <span>
-        <kbd className="px-1 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-[9px] font-mono">⌘?</kbd>
-        {' '}for shortcuts
-      </span>
+        <span className="text-slate-300 dark:text-slate-600">|</span>
+
+        <span className="font-mono">v2.4.1</span>
+
+        <button
+          className="p-0.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded"
+          title="Settings"
+        >
+          <Settings className="w-3 h-3" />
+        </button>
+      </div>
     </div>
   );
 }

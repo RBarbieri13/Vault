@@ -1,11 +1,24 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useApp } from '@/lib/store';
 import { cn } from '@/lib/utils';
-import { typeColors, statusColors, tagColors, TOOL_TYPES, TOOL_STATUSES, type ToolType, type ToolStatus } from '@/lib/data';
+import { typeColors, statusColors, tagColors, TOOL_TYPES, TOOL_STATUSES } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import {
   ChevronDown,
   X,
+  Table,
+  Grid3x3,
+  List,
+  Columns,
+  Filter,
+  ArrowUpDown,
+  Layers,
+  Download,
+  Bookmark,
+  RefreshCw,
+  Trash2,
+  Plus,
+  Check,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -14,24 +27,42 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
   DropdownMenuCheckboxItem,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 
 interface ToolbarProps {
   onAddTool?: () => void;
   onRefresh?: () => void;
-  viewMode?: 'grid' | 'list';
-  onViewModeChange?: (mode: 'grid' | 'list') => void;
+  onDeleteSelected?: () => void;
+  viewMode?: 'table' | 'grid' | 'list';
+  onViewModeChange?: (mode: 'table' | 'grid' | 'list') => void;
+  selectedCount?: number;
   className?: string;
 }
 
 export function Toolbar({
   onAddTool,
   onRefresh,
-  viewMode = 'list',
+  onDeleteSelected,
+  viewMode = 'table',
   onViewModeChange,
+  selectedCount = 0,
   className,
 }: ToolbarProps) {
   const { state, dispatch } = useApp();
+  const [columnsVisible, setColumnsVisible] = useState({
+    icon: true,
+    name: true,
+    type: true,
+    status: true,
+    desc: true,
+    tags: true,
+    source: true,
+    rating: true,
+    access: true,
+    owner: true,
+    modified: true,
+  });
 
   // Get unique tags from tools
   const allTags = useMemo(() => {
@@ -42,46 +73,6 @@ export function Toolbar({
     return Array.from(tagSet).sort();
   }, [state.tools]);
 
-  // Count filtered tools
-  const filteredCount = useMemo(() => {
-    let tools = Object.values(state.tools);
-
-    if (state.typeFilter !== 'all') {
-      tools = tools.filter(t => t.type === state.typeFilter);
-    }
-    if (state.statusFilter !== 'all') {
-      tools = tools.filter(t => t.status === state.statusFilter);
-    }
-    if (state.tagFilters.length > 0) {
-      tools = tools.filter(t =>
-        state.tagFilters.some(tag => t.tags?.includes(tag))
-      );
-    }
-    if (state.dateFilter !== 'all') {
-      const now = new Date();
-      tools = tools.filter(t => {
-        const created = new Date(t.createdAt);
-        switch (state.dateFilter) {
-          case 'today':
-            return created.toDateString() === now.toDateString();
-          case 'week':
-            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-            return created >= weekAgo;
-          case 'month':
-            const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-            return created >= monthAgo;
-          case 'year':
-            const yearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-            return created >= yearAgo;
-          default:
-            return true;
-        }
-      });
-    }
-
-    return tools.length;
-  }, [state.tools, state.typeFilter, state.statusFilter, state.tagFilters, state.dateFilter]);
-
   // Check if any filters are active
   const hasActiveFilters =
     state.typeFilter !== 'all' ||
@@ -89,265 +80,357 @@ export function Toolbar({
     state.tagFilters.length > 0 ||
     state.dateFilter !== 'all';
 
+  const activeFilterCount = [
+    state.typeFilter !== 'all' ? 1 : 0,
+    state.statusFilter !== 'all' ? 1 : 0,
+    state.tagFilters.length > 0 ? 1 : 0,
+    state.dateFilter !== 'all' ? 1 : 0,
+  ].reduce((a, b) => a + b, 0);
+
   const handleClearFilters = () => {
     dispatch({ type: 'CLEAR_ALL_FILTERS' });
   };
 
-  // Get display text for filters
-  const typeLabel = state.typeFilter === 'all' ? 'All Types' : state.typeFilter;
-  const statusLabel = state.statusFilter === 'all' ? 'All Status' : `Status: ${state.statusFilter.charAt(0).toUpperCase() + state.statusFilter.slice(1)}`;
-  const tagsLabel = state.tagFilters.length === 0
-    ? 'All Tags'
-    : state.tagFilters.length === 1
-      ? `Tags: ${state.tagFilters[0]}`
-      : `Tags: ${state.tagFilters.length} selected`;
-  const dateLabel = state.dateFilter === 'all'
-    ? 'All Time'
-    : state.dateFilter === 'today'
-      ? 'Added Today'
-      : state.dateFilter === 'week'
-        ? 'Added This Week'
-        : state.dateFilter === 'month'
-          ? 'Added This Month'
-          : 'Added This Year';
-
   return (
     <div className={cn(
-      "flex items-center gap-2 px-4 h-[44px] min-h-[44px]",
+      "flex items-center gap-1.5 px-3 h-[32px] min-h-[32px]",
       "bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700",
       className
     )}>
-      {/* Type Filter Dropdown */}
+      {/* View Mode Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
             size="sm"
             className={cn(
-              "h-7 px-3 text-[11px] font-medium gap-1",
+              "h-6 px-2 text-[10px] font-medium gap-1",
               "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700",
-              "hover:bg-slate-100 dark:hover:bg-slate-700",
-              state.typeFilter !== 'all' && "border-blue-300 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+              "hover:bg-slate-100 dark:hover:bg-slate-700"
             )}
           >
-            {typeLabel}
-            <ChevronDown className="w-3 h-3 opacity-50" />
+            <Table className="w-3 h-3" />
+            View
+            <ChevronDown className="w-2.5 h-2.5 opacity-50" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-44">
+        <DropdownMenuContent align="start" className="w-32">
           <DropdownMenuItem
-            className="text-xs"
+            className="text-[10px]"
+            onClick={() => onViewModeChange?.('table')}
+          >
+            <Table className="w-3 h-3 mr-2" />
+            Table
+            {viewMode === 'table' && <Check className="w-3 h-3 ml-auto" />}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="text-[10px]"
+            onClick={() => onViewModeChange?.('grid')}
+          >
+            <Grid3x3 className="w-3 h-3 mr-2" />
+            Grid
+            {viewMode === 'grid' && <Check className="w-3 h-3 ml-auto" />}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="text-[10px]"
+            onClick={() => onViewModeChange?.('list')}
+          >
+            <List className="w-3 h-3 mr-2" />
+            List
+            {viewMode === 'list' && <Check className="w-3 h-3 ml-auto" />}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Columns Dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "h-6 px-2 text-[10px] font-medium gap-1",
+              "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700",
+              "hover:bg-slate-100 dark:hover:bg-slate-700"
+            )}
+          >
+            <Columns className="w-3 h-3" />
+            Columns
+            <ChevronDown className="w-2.5 h-2.5 opacity-50" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-36">
+          <DropdownMenuLabel className="text-[9px] text-slate-500">
+            Toggle Columns
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {Object.entries(columnsVisible).map(([key, visible]) => (
+            <DropdownMenuCheckboxItem
+              key={key}
+              checked={visible}
+              onCheckedChange={(checked) => setColumnsVisible(prev => ({ ...prev, [key]: checked }))}
+              className="text-[10px] capitalize"
+            >
+              {key}
+            </DropdownMenuCheckboxItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Filter Dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "h-6 px-2 text-[10px] font-medium gap-1",
+              "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700",
+              "hover:bg-slate-100 dark:hover:bg-slate-700",
+              hasActiveFilters && "border-blue-300 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+            )}
+          >
+            <Filter className="w-3 h-3" />
+            Filter
+            {activeFilterCount > 0 && (
+              <span className="ml-0.5 text-[8px] px-1 py-0.5 bg-blue-500 text-white rounded-full">
+                {activeFilterCount}
+              </span>
+            )}
+            <ChevronDown className="w-2.5 h-2.5 opacity-50" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-52">
+          <DropdownMenuLabel className="text-[9px] text-slate-500">
+            Filter by Type
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            className="text-[10px]"
             onClick={() => dispatch({ type: 'SET_TYPE_FILTER', payload: { filter: 'all' } })}
           >
-            <span className={cn(
-              "w-2 h-2 rounded-full mr-2 bg-slate-300"
-            )} />
             All Types
-            {state.typeFilter === 'all' && <span className="ml-auto">✓</span>}
+            {state.typeFilter === 'all' && <Check className="w-3 h-3 ml-auto" />}
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          {TOOL_TYPES.map(type => {
+          {TOOL_TYPES.slice(0, 6).map(type => {
             const color = typeColors[type];
             return (
               <DropdownMenuItem
                 key={type}
-                className="text-xs"
+                className="text-[10px]"
                 onClick={() => dispatch({ type: 'SET_TYPE_FILTER', payload: { filter: type } })}
               >
-                <span
-                  className="w-2 h-2 rounded-full mr-2"
-                  style={{ backgroundColor: color?.text }}
-                />
+                <span className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: color?.text }} />
                 {type}
-                {state.typeFilter === type && <span className="ml-auto">✓</span>}
+                {state.typeFilter === type && <Check className="w-3 h-3 ml-auto" />}
               </DropdownMenuItem>
             );
           })}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* Status Filter Dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="outline"
-            size="sm"
-            className={cn(
-              "h-7 px-3 text-[11px] font-medium gap-1",
-              "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700",
-              "hover:bg-slate-100 dark:hover:bg-slate-700",
-              state.statusFilter !== 'all' && "border-green-300 bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-            )}
-          >
-            {statusLabel}
-            <ChevronDown className="w-3 h-3 opacity-50" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-36">
-          <DropdownMenuItem
-            className="text-xs"
-            onClick={() => dispatch({ type: 'SET_STATUS_FILTER', payload: { filter: 'all' } })}
-          >
-            All Status
-            {state.statusFilter === 'all' && <span className="ml-auto">✓</span>}
-          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel className="text-[9px] text-slate-500">
+            Filter by Status
+          </DropdownMenuLabel>
           <DropdownMenuSeparator />
           {TOOL_STATUSES.map(status => {
             const color = statusColors[status];
             return (
               <DropdownMenuItem
                 key={status}
-                className="text-xs capitalize"
+                className="text-[10px] capitalize"
                 onClick={() => dispatch({ type: 'SET_STATUS_FILTER', payload: { filter: status } })}
               >
-                <span
-                  className="w-2 h-2 rounded-full mr-2"
-                  style={{ backgroundColor: color?.text }}
-                />
+                <span className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: color?.text }} />
                 {status}
-                {state.statusFilter === status && <span className="ml-auto">✓</span>}
+                {state.statusFilter === status && <Check className="w-3 h-3 ml-auto" />}
               </DropdownMenuItem>
             );
           })}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* Tags Filter Dropdown (Multi-select) */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="outline"
-            size="sm"
-            className={cn(
-              "h-7 px-3 text-[11px] font-medium gap-1",
-              "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700",
-              "hover:bg-slate-100 dark:hover:bg-slate-700",
-              state.tagFilters.length > 0 && "border-purple-300 bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
-            )}
-          >
-            {tagsLabel}
-            <ChevronDown className="w-3 h-3 opacity-50" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-44 max-h-64 overflow-y-auto">
-          {state.tagFilters.length > 0 && (
+          {hasActiveFilters && (
             <>
-              <DropdownMenuItem
-                className="text-xs text-slate-500"
-                onClick={() => dispatch({ type: 'SET_TAG_FILTERS', payload: { tags: [] } })}
-              >
-                Clear all tags
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-[10px] text-red-500"
+                onClick={handleClearFilters}
+              >
+                <X className="w-3 h-3 mr-2" />
+                Clear All Filters
+              </DropdownMenuItem>
             </>
           )}
-          {allTags.map(tag => {
-            const isSelected = state.tagFilters.includes(tag);
-            const color = tagColors[tag] || tagColors.default;
-            return (
-              <DropdownMenuCheckboxItem
-                key={tag}
-                checked={isSelected}
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    dispatch({ type: 'ADD_TAG_FILTER', payload: { tag } });
-                  } else {
-                    dispatch({ type: 'REMOVE_TAG_FILTER', payload: { tag } });
-                  }
-                }}
-                className="text-xs"
-              >
-                <span
-                  className="w-2 h-2 rounded-full mr-2"
-                  style={{ backgroundColor: color?.text }}
-                />
-                {tag}
-              </DropdownMenuCheckboxItem>
-            );
-          })}
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Date Filter Dropdown */}
+      {/* Sort Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
             size="sm"
             className={cn(
-              "h-7 px-3 text-[11px] font-medium gap-1",
+              "h-6 px-2 text-[10px] font-medium gap-1",
               "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700",
-              "hover:bg-slate-100 dark:hover:bg-slate-700",
-              state.dateFilter !== 'all' && "border-amber-300 bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+              "hover:bg-slate-100 dark:hover:bg-slate-700"
             )}
           >
-            {dateLabel}
-            <ChevronDown className="w-3 h-3 opacity-50" />
+            <ArrowUpDown className="w-3 h-3" />
+            Sort
+            <ChevronDown className="w-2.5 h-2.5 opacity-50" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-36">
+          <DropdownMenuItem className="text-[10px]">Name A-Z</DropdownMenuItem>
+          <DropdownMenuItem className="text-[10px]">Name Z-A</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem className="text-[10px]">Type</DropdownMenuItem>
+          <DropdownMenuItem className="text-[10px]">Status</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem className="text-[10px]">Date Added ↑</DropdownMenuItem>
+          <DropdownMenuItem className="text-[10px]">Date Added ↓</DropdownMenuItem>
+          <DropdownMenuItem className="text-[10px]">Rating ↑</DropdownMenuItem>
+          <DropdownMenuItem className="text-[10px]">Rating ↓</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Group Dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "h-6 px-2 text-[10px] font-medium gap-1",
+              "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700",
+              "hover:bg-slate-100 dark:hover:bg-slate-700"
+            )}
+          >
+            <Layers className="w-3 h-3" />
+            Group
+            <ChevronDown className="w-2.5 h-2.5 opacity-50" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-36">
+          <DropdownMenuItem className="text-[10px]">
+            <Check className="w-3 h-3 mr-2" />
+            By Type
+          </DropdownMenuItem>
+          <DropdownMenuItem className="text-[10px]">By Status</DropdownMenuItem>
+          <DropdownMenuItem className="text-[10px]">By Category</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem className="text-[10px]">No Grouping</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Export Dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "h-6 px-2 text-[10px] font-medium gap-1",
+              "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700",
+              "hover:bg-slate-100 dark:hover:bg-slate-700"
+            )}
+          >
+            <Download className="w-3 h-3" />
+            Export
+            <ChevronDown className="w-2.5 h-2.5 opacity-50" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-36">
+          <DropdownMenuItem className="text-[10px]">Export CSV</DropdownMenuItem>
+          <DropdownMenuItem className="text-[10px]">Export JSON</DropdownMenuItem>
+          <DropdownMenuItem className="text-[10px]">Export Markdown</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem className="text-[10px]">Print View</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* My Filters */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "h-6 px-2 text-[10px] font-medium gap-1",
+              "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700",
+              "hover:bg-slate-100 dark:hover:bg-slate-700"
+            )}
+          >
+            <Bookmark className="w-3 h-3" />
+            My Filters
+            <ChevronDown className="w-2.5 h-2.5 opacity-50" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-40">
-          <DropdownMenuItem
-            className="text-xs"
-            onClick={() => dispatch({ type: 'SET_DATE_FILTER', payload: { filter: 'all' } })}
-          >
-            All Time
-            {state.dateFilter === 'all' && <span className="ml-auto">✓</span>}
-          </DropdownMenuItem>
+          <DropdownMenuLabel className="text-[9px] text-slate-500">
+            Saved Filters
+          </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem
-            className="text-xs"
-            onClick={() => dispatch({ type: 'SET_DATE_FILTER', payload: { filter: 'today' } })}
-          >
-            Added Today
-            {state.dateFilter === 'today' && <span className="ml-auto">✓</span>}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className="text-xs"
-            onClick={() => dispatch({ type: 'SET_DATE_FILTER', payload: { filter: 'week' } })}
-          >
-            Added This Week
-            {state.dateFilter === 'week' && <span className="ml-auto">✓</span>}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className="text-xs"
-            onClick={() => dispatch({ type: 'SET_DATE_FILTER', payload: { filter: 'month' } })}
-          >
-            Added This Month
-            {state.dateFilter === 'month' && <span className="ml-auto">✓</span>}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className="text-xs"
-            onClick={() => dispatch({ type: 'SET_DATE_FILTER', payload: { filter: 'year' } })}
-          >
-            Added This Year
-            {state.dateFilter === 'year' && <span className="ml-auto">✓</span>}
+          <DropdownMenuItem className="text-[10px]">Pinned Tools</DropdownMenuItem>
+          <DropdownMenuItem className="text-[10px]">LLM Chatbots</DropdownMenuItem>
+          <DropdownMenuItem className="text-[10px]">Image Generation</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem className="text-[10px]">
+            <Plus className="w-3 h-3 mr-2" />
+            Save Current Filter
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-
-      {/* Clear Filters Button */}
-      {hasActiveFilters && (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 px-2 text-[11px] text-slate-500 hover:text-slate-700"
-          onClick={handleClearFilters}
-        >
-          <X className="w-3 h-3 mr-1" />
-          Clear
-        </Button>
-      )}
 
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Item Count Badge */}
-      <div className="flex items-center gap-1 px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded text-[11px] text-slate-600 dark:text-slate-400">
-        <span className="font-medium">{filteredCount}</span>
-        <span>items</span>
-      </div>
+      {/* Bulk Actions (shown when items selected) */}
+      {selectedCount > 0 && (
+        <div className="flex items-center gap-1.5 mr-2">
+          <span className="text-[10px] text-slate-500 mr-1">
+            {selectedCount} selected
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-6 px-2 text-[10px]"
+          >
+            Merge
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-6 px-2 text-[10px]"
+          >
+            Archive
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-6 px-2 text-[10px]"
+          >
+            Tag
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-6 px-2 text-[10px] text-red-500 hover:text-red-600"
+            onClick={onDeleteSelected}
+          >
+            <Trash2 className="w-3 h-3 mr-1" />
+            Delete
+          </Button>
+        </div>
+      )}
+
+      {/* Refresh Button */}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-6 w-6 p-0"
+        onClick={onRefresh}
+        title="Refresh"
+      >
+        <RefreshCw className="w-3.5 h-3.5 text-slate-500" />
+      </Button>
     </div>
   );
 }
-
-// Removed QuickFilters component as it's not needed in the new design
