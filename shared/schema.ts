@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, boolean, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, boolean, timestamp, integer, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -15,7 +15,10 @@ export const categories = pgTable("categories", {
   collapsed: boolean("collapsed").notNull().default(false),
   toolIds: text("tool_ids").array().notNull().default(sql`ARRAY[]::text[]`),
   sortOrder: integer("sort_order").notNull().default(0),
-});
+}, (table) => [
+  index("categories_parent_id_idx").on(table.parentId),
+  index("categories_sort_order_idx").on(table.sortOrder),
+]);
 
 export const tools = pgTable("tools", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -40,7 +43,17 @@ export const tools = pgTable("tools", {
   status: text("status").notNull().default('active'),
   // Content type: tool, website, video, podcast, article
   contentType: text("content_type").notNull().default('tool'),
-});
+}, (table) => [
+  // Indexes for frequently queried columns
+  index("tools_category_id_idx").on(table.categoryId),
+  index("tools_type_idx").on(table.type),
+  index("tools_status_idx").on(table.status),
+  index("tools_is_pinned_idx").on(table.isPinned),
+  index("tools_content_type_idx").on(table.contentType),
+  index("tools_created_at_idx").on(table.createdAt),
+  // Composite index for common filter combinations
+  index("tools_type_status_idx").on(table.type, table.status),
+]);
 
 // Collections table for user-created collections
 export const collections = pgTable("collections", {

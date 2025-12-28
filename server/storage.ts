@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, desc, asc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import * as schema from "@shared/schema";
@@ -36,20 +36,32 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   private db: ReturnType<typeof drizzle>;
+  private pool: pg.Pool;
 
   constructor() {
-    const pool = new Pool({
+    // Optimized connection pool settings for better performance
+    this.pool = new Pool({
       connectionString: process.env.DATABASE_URL,
+      // Connection pool optimization
+      max: 20, // Maximum number of connections in the pool
+      min: 2, // Minimum number of connections to keep open
+      idleTimeoutMillis: 30000, // Close idle connections after 30 seconds
+      connectionTimeoutMillis: 5000, // Wait 5 seconds for a connection
+      maxUses: 7500, // Close connections after 7500 queries to prevent memory leaks
     });
-    this.db = drizzle(pool, { schema });
+    this.db = drizzle(this.pool, { schema });
   }
 
   // ============================================
   // CATEGORIES
   // ============================================
 
+  // Categories - ordered by sortOrder for consistent UI
   async getAllCategories(): Promise<Category[]> {
-    return await this.db.select().from(schema.categories);
+    return await this.db
+      .select()
+      .from(schema.categories)
+      .orderBy(asc(schema.categories.sortOrder));
   }
 
   async getCategory(id: string): Promise<Category | undefined> {
@@ -88,8 +100,15 @@ export class DatabaseStorage implements IStorage {
   // TOOLS
   // ============================================
 
+  // Tools - ordered by pinned first, then by name for consistent display
   async getAllTools(): Promise<Tool[]> {
-    return await this.db.select().from(schema.tools);
+    return await this.db
+      .select()
+      .from(schema.tools)
+      .orderBy(
+        desc(schema.tools.isPinned),
+        asc(schema.tools.name)
+      );
   }
 
   async getTool(id: string): Promise<Tool | undefined> {
@@ -293,7 +312,15 @@ export class MemoryStorage implements IStorage {
 
   async createCategory(category: InsertCategory): Promise<Category> {
     const id = `cat-${Date.now()}`;
-    const newCategory: Category = { ...category, id };
+    const newCategory: Category = {
+      id,
+      name: category.name,
+      icon: category.icon ?? null,
+      parentId: category.parentId ?? null,
+      collapsed: category.collapsed ?? false,
+      toolIds: category.toolIds ?? [],
+      sortOrder: category.sortOrder ?? 0,
+    };
     this.categories.set(id, newCategory);
     return newCategory;
   }

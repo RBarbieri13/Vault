@@ -1,0 +1,7 @@
+{
+  "livePreview.defaultPreviewPath": "/",
+  "livePreview.portNumber": 3000,
+  "livePreview.openPreviewTarget": "internalBrowser",
+  "livePreview.serverRoot": "/Users/robert.barbieri/Claude Code/Vault/Vault/client",
+  "simpleBrowser.focusLockIndicator.enabled": false
+}

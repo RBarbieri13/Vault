@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertCategorySchema, insertToolSchema, insertCollectionSchema } from "@shared/schema";
 import { fromError } from "zod-validation-error";
+import { analyzeUrl } from "./services/url-analyzer";
 
 // Structured logging for API calls
 const logApi = (method: string, path: string, status: number, duration: number, details?: string) => {
@@ -260,6 +261,41 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error removing tool from collection:", error);
       res.status(500).json({ error: "Failed to remove tool from collection" });
+    }
+  }));
+
+  // ============================================
+  // URL ANALYSIS ROUTES
+  // ============================================
+
+  // URL Analysis endpoint - AI-powered auto-fill
+  app.post("/api/analyze-url", withTiming(async (req, res) => {
+    try {
+      const { url } = req.body;
+
+      if (!url || typeof url !== "string") {
+        return res.status(400).json({
+          success: false,
+          error: "URL is required",
+          errorType: "MISSING_URL"
+        });
+      }
+
+      // Get categories for AI to match against
+      const categories = await storage.getAllCategories();
+      const categoryList = categories.map(c => ({ id: c.id, name: c.name }));
+
+      // Analyze the URL with AI
+      const result = await analyzeUrl(url, categoryList);
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error analyzing URL:", error);
+      res.status(500).json({
+        success: false,
+        error: "Analysis failed unexpectedly",
+        errorType: "SERVER_ERROR"
+      });
     }
   }));
 
