@@ -19,6 +19,9 @@ import {
   Trash2,
   Plus,
   Check,
+  Link,
+  FileText,
+  Upload,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -374,6 +377,54 @@ export function Toolbar({
 
       {/* Spacer */}
       <div className="flex-1" />
+
+      {/* Add Content Button - Primary Action */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            size="sm"
+            className={cn(
+              "h-6 px-3 text-[10px] font-medium gap-1.5",
+              "bg-cyan-600 hover:bg-cyan-500 text-white",
+              "shadow-sm shadow-cyan-500/20"
+            )}
+          >
+            <Plus className="w-3 h-3" />
+            Add
+            <ChevronDown className="w-2.5 h-2.5 opacity-70" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuLabel className="text-[9px] text-slate-500">
+            Add New Content
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            className="text-[10px] cursor-pointer"
+            onClick={onAddTool}
+          >
+            <Link className="w-3.5 h-3.5 mr-2 text-cyan-500" />
+            Import from URL
+            <span className="ml-auto text-[8px] text-slate-500">⌘N</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="text-[10px] cursor-pointer"
+            onClick={onAddTool}
+          >
+            <FileText className="w-3.5 h-3.5 mr-2 text-emerald-500" />
+            Add Manually
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            className="text-[10px] cursor-pointer opacity-50"
+            disabled
+          >
+            <Upload className="w-3.5 h-3.5 mr-2 text-purple-500" />
+            Import from File
+            <span className="ml-auto text-[8px] text-slate-500">Soon</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       {/* Bulk Actions (shown when items selected) */}
       {selectedCount > 0 && (
