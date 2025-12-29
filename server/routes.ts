@@ -1,9 +1,30 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCategorySchema, insertToolSchema, insertCollectionSchema } from "@shared/schema";
+import { insertCategorySchema, insertToolSchema, insertCollectionSchema, type Category } from "@shared/schema";
 import { fromError } from "zod-validation-error";
 import { analyzeUrl } from "./services/url-analyzer";
+
+// Category cache for faster URL analysis
+let categoryCache: { data: Pick<Category, "id" | "name">[]; timestamp: number } | null = null;
+const CATEGORY_CACHE_TTL = 60000; // 1 minute
+
+async function getCachedCategories(): Promise<Pick<Category, "id" | "name">[]> {
+  const now = Date.now();
+  if (categoryCache && (now - categoryCache.timestamp) < CATEGORY_CACHE_TTL) {
+    return categoryCache.data;
+  }
+  const categories = await storage.getAllCategories();
+  categoryCache = {
+    data: categories.map(c => ({ id: c.id, name: c.name })),
+    timestamp: now,
+  };
+  return categoryCache.data;
+}
+
+function invalidateCategoryCache() {
+  categoryCache = null;
+}
 
 // Structured logging for API calls
 const logApi = (method: string, path: string, status: number, duration: number, details?: string) => {
@@ -78,6 +99,7 @@ export async function registerRoutes(
         return res.status(400).json({ error: fromError(parsed.error).toString() });
       }
       const category = await storage.createCategory(parsed.data);
+      invalidateCategoryCache();
       res.status(201).json(category);
     } catch (error) {
       console.error("Error creating category:", error);
@@ -91,6 +113,7 @@ export async function registerRoutes(
       if (!category) {
         return res.status(404).json({ error: "Category not found" });
       }
+      invalidateCategoryCache();
       res.json(category);
     } catch (error) {
       console.error("Error updating category:", error);
@@ -101,6 +124,7 @@ export async function registerRoutes(
   app.delete("/api/categories/:id", withTiming(async (req, res) => {
     try {
       await storage.deleteCategory(req.params.id);
+      invalidateCategoryCache();
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting category:", error);
@@ -268,7 +292,7 @@ export async function registerRoutes(
   // URL ANALYSIS ROUTES
   // ============================================
 
-  // URL Analysis endpoint - AI-powered auto-fill
+  // URL Analysis endpoint - AI-powered auto-fill (optimized with caching)
   app.post("/api/analyze-url", withTiming(async (req, res) => {
     try {
       const { url } = req.body;
@@ -281,9 +305,8 @@ export async function registerRoutes(
         });
       }
 
-      // Get categories for AI to match against
-      const categories = await storage.getAllCategories();
-      const categoryList = categories.map(c => ({ id: c.id, name: c.name }));
+      // Use cached categories for faster response
+      const categoryList = await getCachedCategories();
 
       // Analyze the URL with AI
       const result = await analyzeUrl(url, categoryList);
