@@ -30,6 +30,7 @@ export type Tool = {
   usage: number; // 0-100 percentage
   status: ToolStatus;
   contentType: ContentType;
+  customLabels?: string[]; // User-defined custom labels
 };
 
 export type Category = {

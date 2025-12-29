@@ -65,18 +65,21 @@ function SidebarItem({
   return (
     <div
       className={cn(
-        "flex items-center gap-1.5 py-1 pr-2 cursor-pointer transition-colors group",
+        "flex items-center gap-1.5 py-1.5 pr-2 cursor-pointer transition-all duration-150 group",
         "text-[11px] leading-tight",
         isSelected
-          ? "bg-cyan-500/20 text-cyan-400"
-          : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
+          ? "bg-gradient-to-r from-blue-500/20 to-transparent border-l-[3px] border-l-blue-400 text-white font-semibold"
+          : "text-slate-200 hover:bg-white/8 hover:text-white border-l-[3px] border-l-transparent"
       )}
-      style={{ paddingLeft }}
+      style={{ paddingLeft: paddingLeft - 3 }}
       onClick={hasChildren ? onToggle : onClick}
     >
       {/* Expand/collapse chevron */}
       {hasChildren ? (
-        <span className="w-3 h-3 flex items-center justify-center text-slate-500">
+        <span className={cn(
+          "w-3 h-3 flex items-center justify-center transition-transform duration-150",
+          isExpanded ? "text-slate-300" : "text-slate-400"
+        )}>
           {isExpanded ? (
             <ChevronDown className="w-2.5 h-2.5" />
           ) : (
@@ -89,7 +92,7 @@ function SidebarItem({
 
       {/* Icon */}
       {icon && (
-        <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">
+        <span className="w-4 h-4 flex items-center justify-center flex-shrink-0 text-slate-300">
           {icon}
         </span>
       )}
@@ -99,7 +102,11 @@ function SidebarItem({
 
       {/* Count badge */}
       {count !== undefined && count > 0 && (
-        <span className="text-[10px] text-slate-500 min-w-[16px] text-right">
+        <span className={cn(
+          "text-[10px] min-w-[20px] text-center px-1.5 py-0.5 rounded-full",
+          "bg-white/10",
+          isSelected ? "text-blue-300" : "text-slate-300"
+        )}>
           {count}
         </span>
       )}
@@ -116,26 +123,35 @@ interface SectionHeaderProps {
 }
 
 function SectionHeader({ label, icon, count, isExpanded, onToggle }: SectionHeaderProps) {
+  // Hide section if count is 0
+  if (count === 0) return null;
+
   return (
     <div
       className={cn(
-        "flex items-center gap-1.5 px-2 py-1.5 cursor-pointer",
-        "text-[10px] font-semibold uppercase tracking-wider",
-        "text-slate-500 hover:text-slate-300 transition-colors"
+        "flex items-center gap-1.5 px-3 py-2 cursor-pointer mt-2",
+        "text-[10px] font-bold uppercase tracking-[0.08em]",
+        "text-slate-300 hover:text-white transition-colors",
+        "border-l-2 border-l-blue-500/40"
       )}
       onClick={onToggle}
     >
-      <span className="w-3 h-3 flex items-center justify-center">
+      <span className={cn(
+        "w-3 h-3 flex items-center justify-center transition-transform duration-150",
+        isExpanded ? "text-slate-200" : "text-slate-400"
+      )}>
         {isExpanded ? (
           <ChevronDown className="w-2.5 h-2.5" />
         ) : (
           <ChevronRight className="w-2.5 h-2.5" />
         )}
       </span>
-      {icon && <span className="w-3 h-3 flex items-center justify-center">{icon}</span>}
+      {icon && <span className="w-3 h-3 flex items-center justify-center text-slate-300">{icon}</span>}
       <span className="flex-1">{label}</span>
-      {count !== undefined && (
-        <span className="text-[10px] text-slate-600">({count})</span>
+      {count !== undefined && count > 0 && (
+        <span className="text-[9px] text-slate-300 bg-white/10 px-1.5 py-0.5 rounded-full">
+          {count}
+        </span>
       )}
     </div>
   );
@@ -268,7 +284,7 @@ export function Sidebar({ className }: { className?: string }) {
   return (
     <div className={cn(
       "flex flex-col h-full w-[240px] min-w-[240px]",
-      "bg-[#1a1f2e] text-slate-200",
+      "bg-[#141824] text-white",
       className
     )}>
       {/* Header */}
@@ -315,14 +331,14 @@ export function Sidebar({ className }: { className?: string }) {
 
         {/* Search */}
         <div className="relative group">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500 group-focus-within:text-slate-300 transition-colors" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-white transition-colors" />
           <Input
             id="sidebar-search"
             placeholder="Search All..."
             className={cn(
-              "pl-8 h-8 text-[11px] bg-[#252b3b] border-slate-700/30",
-              "text-slate-200 placeholder:text-slate-500",
-              "focus-visible:ring-1 focus-visible:ring-cyan-500/50 focus-visible:bg-[#2a3142]"
+              "pl-8 h-8 text-[11px] bg-[#1e2433] border-slate-600/50",
+              "text-white placeholder:text-slate-400",
+              "focus-visible:ring-1 focus-visible:ring-blue-500/50 focus-visible:bg-[#252b3b]"
             )}
             value={state.searchQuery}
             onChange={(e) => dispatch({ type: 'SET_SEARCH_QUERY', payload: { query: e.target.value } })}

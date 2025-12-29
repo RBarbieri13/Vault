@@ -43,6 +43,8 @@ export const tools = pgTable("tools", {
   status: text("status").notNull().default('active'),
   // Content type: tool, website, video, podcast, article
   contentType: text("content_type").notNull().default('tool'),
+  // Custom user-defined labels
+  customLabels: text("custom_labels").array().notNull().default(sql`ARRAY[]::text[]`),
 }, (table) => [
   // Indexes for frequently queried columns
   index("tools_category_id_idx").on(table.categoryId),

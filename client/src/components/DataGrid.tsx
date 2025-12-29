@@ -19,6 +19,10 @@ import {
   Globe,
   Users,
   Settings,
+  GripVertical,
+  Tag,
+  Plus,
+  X,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -30,6 +34,34 @@ import {
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
+import {
+  DndContext,
+  DragOverlay,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragStartEvent,
+  DragEndEvent,
+  DragOverEvent,
+  useDroppable,
+} from '@dnd-kit/core';
+import {
+  useSortable,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 
 // Owner type for display
 interface Owner {
@@ -68,19 +100,22 @@ const getSourceDomain = (url: string): string => {
   }
 };
 
-// Format modified time
+// Format modified time - clearer format
 const formatModified = (date: Date | number | string): string => {
   const d = new Date(date);
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffHours < 1) return 'just now';
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
-  return `${Math.floor(diffDays / 30)}m ago`;
+  if (diffMins < 1) return 'now';
+  if (diffMins < 60) return `${diffMins} min`;
+  if (diffHours < 24) return `${diffHours} hr`;
+  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''}`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} wk`;
+  if (diffDays < 365) return `${Math.floor(diffDays / 30)} mo`;
+  return `${Math.floor(diffDays / 365)} yr`;
 };
 
 // Get status display
@@ -145,6 +180,361 @@ const categoryMeta: Record<string, { icon: string; color: string; order: number 
   SEARCH: { icon: '🔍', color: '#ede9fe', order: 10 },
 };
 
+// Custom label colors for visual distinction
+const labelColors = [
+  { bg: '#3b82f6', text: '#ffffff' }, // blue
+  { bg: '#10b981', text: '#ffffff' }, // green
+  { bg: '#f59e0b', text: '#000000' }, // amber
+  { bg: '#ef4444', text: '#ffffff' }, // red
+  { bg: '#8b5cf6', text: '#ffffff' }, // violet
+  { bg: '#ec4899', text: '#ffffff' }, // pink
+  { bg: '#06b6d4', text: '#000000' }, // cyan
+  { bg: '#84cc16', text: '#000000' }, // lime
+];
+
+const getLabelColor = (label: string) => {
+  const hash = label.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return labelColors[hash % labelColors.length];
+};
+
+// Droppable category header component
+interface DroppableCategoryProps {
+  type: string;
+  isOver: boolean;
+  children: React.ReactNode;
+}
+
+function DroppableCategory({ type, isOver, children }: DroppableCategoryProps) {
+  const { setNodeRef } = useDroppable({
+    id: `category-${type}`,
+    data: { type: 'category', categoryType: type },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "transition-all duration-200",
+        isOver && "ring-2 ring-blue-500 ring-inset bg-blue-500/10"
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+// Draggable row component
+interface DraggableRowProps {
+  tool: Tool;
+  rowNum: number;
+  isSelected: boolean;
+  isRowChecked: boolean;
+  isHovered: boolean;
+  gridTemplateColumns: string;
+  onSelect: () => void;
+  onHover: (id: string | null) => void;
+  onTogglePin: (tool: Tool, e: React.MouseEvent) => void;
+  onCopyUrl: (tool: Tool, e: React.MouseEvent) => void;
+  onDelete: (tool: Tool, e: React.MouseEvent) => void;
+  onToggleRowSelection: () => void;
+  onOpenLabelDialog: (tool: Tool) => void;
+  localIndex: number;
+}
+
+function DraggableRow({
+  tool,
+  rowNum,
+  isSelected,
+  isRowChecked,
+  isHovered,
+  gridTemplateColumns,
+  onSelect,
+  onHover,
+  onTogglePin,
+  onCopyUrl,
+  onDelete,
+  onToggleRowSelection,
+  onOpenLabelDialog,
+  localIndex,
+}: DraggableRowProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: tool.id,
+    data: { type: 'tool', tool },
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const typeColor = getTypeColor(tool.type);
+  const owner = getOwner(tool);
+  const access = getAccessIcon(tool);
+  const statusDisplay = getStatusDisplay(tool.status);
+  const AccessIcon = access.icon;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ ...style, gridTemplateColumns }}
+      className={cn(
+        "grid items-center gap-0 px-2 h-[24px] min-h-[24px] group",
+        "border-b border-slate-700/20",
+        "cursor-pointer transition-all duration-100",
+        isDragging && "opacity-50 bg-blue-500/20 z-50 shadow-lg",
+        isSelected
+          ? "bg-gradient-to-r from-blue-500/15 via-blue-500/8 to-transparent border-l-[3px] border-l-blue-500"
+          : isRowChecked
+            ? "bg-blue-500/8 border-l-[3px] border-l-blue-400/60"
+            : "hover:bg-white/[0.04] border-l-[3px] border-l-transparent",
+        localIndex % 2 === 1 && !isSelected && !isRowChecked && "bg-white/[0.015]"
+      )}
+      onClick={onSelect}
+      onMouseEnter={() => onHover(tool.id)}
+      onMouseLeave={() => onHover(null)}
+      {...attributes}
+    >
+      {/* Drag Handle + Row Number */}
+      <div className="flex justify-center items-center px-1 gap-0.5">
+        <span
+          {...listeners}
+          className={cn(
+            "cursor-grab active:cursor-grabbing text-slate-500 hover:text-slate-300 transition-colors",
+            "opacity-0 group-hover:opacity-100"
+          )}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <GripVertical className="w-3 h-3" />
+        </span>
+        <span className="text-[9px] text-slate-400 font-mono">{rowNum}</span>
+      </div>
+
+      {/* Checkbox */}
+      <div className="flex justify-center items-center">
+        <Checkbox
+          checked={isRowChecked}
+          onCheckedChange={onToggleRowSelection}
+          onClick={(e) => e.stopPropagation()}
+          className={cn(
+            "h-3.5 w-3.5 border-slate-500 transition-all",
+            "hover:border-slate-400 hover:bg-white/5",
+            "data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+          )}
+        />
+      </div>
+
+      {/* Icon */}
+      <div className="flex justify-center items-center">
+        <button
+          className={cn(
+            "w-5 h-5 flex items-center justify-center rounded text-[9px] font-bold",
+            tool.isPinned ? "text-yellow-500" : ""
+          )}
+          style={{ backgroundColor: typeColor.bg, color: typeColor.text }}
+          onClick={(e) => onTogglePin(tool, e)}
+        >
+          {tool.isPinned ? (
+            <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
+          ) : (
+            tool.icon || tool.name.substring(0, 2)
+          )}
+        </button>
+      </div>
+
+      {/* Name */}
+      <div className="flex items-center gap-1 min-w-0 px-1">
+        <span className="text-[10px] font-medium text-slate-200 truncate">
+          {tool.name}
+        </span>
+        {isHovered && (
+          <a
+            href={tool.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-shrink-0 text-slate-400 hover:text-cyan-400"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ExternalLink className="w-2.5 h-2.5" />
+          </a>
+        )}
+      </div>
+
+      {/* Type badge */}
+      <div className="flex items-center px-1">
+        <span
+          className="text-[8px] font-semibold px-1.5 py-0.5 rounded truncate uppercase border"
+          style={{
+            backgroundColor: `${typeColor.bg}50`,
+            color: typeColor.text,
+            borderColor: `${typeColor.text}30`
+          }}
+        >
+          {tool.type}
+        </span>
+      </div>
+
+      {/* Status */}
+      <div className="flex items-center gap-1 px-1">
+        <span className="text-[9px]" style={{ color: statusDisplay.color }}>
+          {statusDisplay.icon}
+        </span>
+        <span className="text-[9px] text-slate-500 truncate">
+          {statusDisplay.label}
+        </span>
+      </div>
+
+      {/* Description */}
+      <div className="flex items-center min-w-0 px-1">
+        <span className="text-[9px] text-slate-400 truncate">
+          {tool.summary}
+        </span>
+      </div>
+
+      {/* Tags + Custom Labels */}
+      <div className="flex items-center gap-0.5 overflow-hidden px-1 group/tags">
+        {/* Custom Labels first */}
+        {tool.customLabels?.slice(0, 1).map(label => {
+          const labelColor = getLabelColor(label);
+          return (
+            <span
+              key={`label-${label}`}
+              className="text-[7px] font-medium px-1.5 py-0.5 rounded truncate flex items-center gap-0.5"
+              style={{
+                backgroundColor: labelColor.bg,
+                color: labelColor.text,
+              }}
+            >
+              <Tag className="w-2 h-2" />
+              {label}
+            </span>
+          );
+        })}
+        {/* Regular Tags */}
+        {tool.tags?.slice(0, tool.customLabels?.length ? 1 : 2).map(tag => {
+          const tagColor = getTagColor(tag);
+          return (
+            <span
+              key={tag}
+              className="text-[7px] font-medium px-1.5 py-0.5 rounded truncate border"
+              style={{
+                backgroundColor: `${tagColor.bg}60`,
+                color: tagColor.text,
+                borderColor: `${tagColor.text}25`
+              }}
+            >
+              {tag}
+            </span>
+          );
+        })}
+        {((tool.tags?.length || 0) + (tool.customLabels?.length || 0)) > 2 && (
+          <span
+            className="text-[7px] text-slate-400 bg-white/5 px-1.5 py-0.5 rounded cursor-pointer hover:bg-white/10 hover:text-slate-300 transition-colors"
+            title={[...(tool.customLabels || []), ...(tool.tags || [])].slice(2).join(', ')}
+          >
+            +{(tool.tags?.length || 0) + (tool.customLabels?.length || 0) - 2}
+          </span>
+        )}
+      </div>
+
+      {/* Source */}
+      <div className="flex items-center gap-1 px-1">
+        <span className="text-[8px]">🔗</span>
+        <span className="text-[9px] text-slate-500 truncate">{getSourceDomain(tool.url)}</span>
+      </div>
+
+      {/* Rating (stars) */}
+      <div className="flex justify-center items-center">
+        <span className="text-[8px] text-yellow-500 tracking-[-1px]">
+          {'★'.repeat(Math.min(5, Math.ceil((tool.usage || 50) / 20)))}
+          {'☆'.repeat(5 - Math.min(5, Math.ceil((tool.usage || 50) / 20)))}
+        </span>
+      </div>
+
+      {/* Access */}
+      <div className="flex justify-center items-center">
+        <AccessIcon className="w-3 h-3" style={{ color: access.color }} />
+      </div>
+
+      {/* Owner */}
+      <div className="flex justify-center items-center">
+        <div
+          className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-semibold text-white"
+          style={{ backgroundColor: owner.color }}
+          title={owner.name}
+        >
+          {owner.initials}
+        </div>
+      </div>
+
+      {/* Modified */}
+      <div className="flex justify-center items-center">
+        <span className="text-[9px] text-slate-400">{formatModified(tool.createdAt)}</span>
+      </div>
+
+      {/* Actions */}
+      <div className="flex justify-center items-center">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "h-4 w-4 text-slate-400 hover:text-slate-600",
+                "opacity-0 group-hover:opacity-100 transition-opacity"
+              )}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <MoreHorizontal className="w-3 h-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-36">
+            <DropdownMenuItem
+              onClick={(e) => { e.stopPropagation(); onOpenLabelDialog(tool); }}
+              className="text-[10px]"
+            >
+              <Tag className="w-3 h-3 mr-2" />
+              Add Label
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(e) => { e.stopPropagation(); onTogglePin(tool, e as unknown as React.MouseEvent); }}
+              className="text-[10px]"
+            >
+              <Pin className="w-3 h-3 mr-2" />
+              {tool.isPinned ? 'Unpin' : 'Pin'}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(e) => onCopyUrl(tool, e as unknown as React.MouseEvent)}
+              className="text-[10px]"
+            >
+              <Copy className="w-3 h-3 mr-2" />
+              Copy URL
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-[10px]">
+              <Edit className="w-3 h-3 mr-2" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={(e) => onDelete(tool, e as unknown as React.MouseEvent)}
+              className="text-[10px] text-red-600 focus:text-red-600"
+            >
+              <Trash className="w-3 h-3 mr-2" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
+  );
+}
+
 export function DataGrid({
   tools: propTools,
   onSelectTool,
@@ -155,6 +545,11 @@ export function DataGrid({
 }: DataGridProps) {
   const { state, dispatch, apiMutations } = useApp();
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
+  const [labelDialogOpen, setLabelDialogOpen] = useState(false);
+  const [labelDialogTool, setLabelDialogTool] = useState<Tool | null>(null);
+  const [newLabel, setNewLabel] = useState('');
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
     CHATBOT: true,
     IMAGE: true,
@@ -427,19 +822,132 @@ export function DataGrid({
     }
   };
 
+  // Drag and drop handlers
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Require 8px of movement before starting drag
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  }, []);
+
+  const handleDragOver = useCallback((event: DragOverEvent) => {
+    const { over } = event;
+    if (over) {
+      setOverId(over.id as string);
+    } else {
+      setOverId(null);
+    }
+  }, []);
+
+  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+    setOverId(null);
+
+    if (!over) return;
+
+    const activeData = active.data.current;
+    const overData = over.data.current;
+
+    // If dropping on a category
+    if (overData?.type === 'category' && activeData?.type === 'tool') {
+      const tool = activeData.tool as Tool;
+      const targetType = overData.categoryType as string;
+
+      // Only update if the type is different
+      if (tool.type !== targetType) {
+        try {
+          await apiMutations.updateTool(tool.id, { type: targetType });
+          toast({
+            title: "Tool Moved",
+            description: `${tool.name} moved to ${targetType} category.`,
+          });
+        } catch {
+          toast({ variant: "destructive", title: "Error", description: "Failed to move tool." });
+        }
+      }
+    }
+  }, [apiMutations]);
+
+  // Custom label handlers
+  const handleOpenLabelDialog = useCallback((tool: Tool) => {
+    setLabelDialogTool(tool);
+    setNewLabel('');
+    setLabelDialogOpen(true);
+  }, []);
+
+  const handleAddLabel = useCallback(async () => {
+    if (!labelDialogTool || !newLabel.trim()) return;
+
+    const currentLabels = labelDialogTool.customLabels || [];
+    if (currentLabels.includes(newLabel.trim())) {
+      toast({ variant: "destructive", title: "Duplicate", description: "This label already exists." });
+      return;
+    }
+
+    try {
+      await apiMutations.updateTool(labelDialogTool.id, {
+        customLabels: [...currentLabels, newLabel.trim()]
+      });
+      toast({
+        title: "Label Added",
+        description: `Label "${newLabel.trim()}" added to ${labelDialogTool.name}.`,
+      });
+      setNewLabel('');
+    } catch {
+      toast({ variant: "destructive", title: "Error", description: "Failed to add label." });
+    }
+  }, [labelDialogTool, newLabel, apiMutations]);
+
+  const handleRemoveLabel = useCallback(async (label: string) => {
+    if (!labelDialogTool) return;
+
+    const currentLabels = labelDialogTool.customLabels || [];
+    try {
+      await apiMutations.updateTool(labelDialogTool.id, {
+        customLabels: currentLabels.filter(l => l !== label)
+      });
+      toast({
+        title: "Label Removed",
+        description: `Label "${label}" removed from ${labelDialogTool.name}.`,
+      });
+    } catch {
+      toast({ variant: "destructive", title: "Error", description: "Failed to remove label." });
+    }
+  }, [labelDialogTool, apiMutations]);
+
   const gridTemplateColumns = columns.map(c => c.width).join(' ');
   const isAllSelected = sortedTools.length > 0 && sortedTools.every(t => selectedRows.has(t.id));
+
+  // Get active tool for drag overlay
+  const activeTool = activeId ? state.tools[activeId] : null;
 
   let globalRowNumber = 0;
 
   return (
+    <>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragEnd={handleDragEnd}
+    >
     <div className={cn("flex flex-col h-full bg-[#1e2433]", className)}>
       {/* Header */}
       <div
         className={cn(
-          "grid items-center gap-0 px-2 h-[26px] min-h-[26px]",
+          "grid items-center gap-0 px-2 h-[28px] min-h-[28px]",
           "bg-[#252b3b] border-b border-slate-700/50",
-          "text-[9px] font-semibold uppercase tracking-wider text-slate-500"
+          "text-[9px] font-semibold uppercase tracking-[0.04em] text-slate-400"
         )}
         style={{ gridTemplateColumns }}
       >
@@ -450,7 +958,7 @@ export function DataGrid({
               "flex items-center gap-0.5 truncate px-1",
               col.align === 'center' && "justify-center",
               col.align === 'right' && "justify-end",
-              col.sortable && "cursor-pointer hover:text-slate-700 dark:hover:text-slate-200"
+              col.sortable && "cursor-pointer hover:text-slate-200 transition-colors"
             )}
             onClick={() => col.sortable && handleSort(col.id)}
           >
@@ -458,21 +966,21 @@ export function DataGrid({
               <Checkbox
                 checked={isAllSelected}
                 onCheckedChange={() => isAllSelected ? deselectAll() : selectAll()}
-                className="h-3 w-3"
+                className="h-3.5 w-3.5 border-slate-500 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
               />
             ) : (
               <>
                 {col.label}
                 {col.sortable && (
-                  <span className="w-2.5 h-2.5 flex items-center justify-center">
+                  <span className="w-3 h-3 flex items-center justify-center ml-0.5">
                     {sortField === col.id && sortDirection === 'asc' && (
-                      <ArrowUp className="w-2 h-2" />
+                      <ArrowUp className="w-2.5 h-2.5 text-blue-400" />
                     )}
                     {sortField === col.id && sortDirection === 'desc' && (
-                      <ArrowDown className="w-2 h-2" />
+                      <ArrowDown className="w-2.5 h-2.5 text-blue-400" />
                     )}
                     {sortField !== col.id && (
-                      <ArrowUpDown className="w-2 h-2 opacity-30" />
+                      <ArrowUpDown className="w-2.5 h-2.5 opacity-30" />
                     )}
                   </span>
                 )}
@@ -492,276 +1000,225 @@ export function DataGrid({
           const isGroupFullySelected = groupSelected === categoryTools.length && categoryTools.length > 0;
           const isGroupPartiallySelected = groupSelected > 0 && groupSelected < categoryTools.length;
 
+          const isDropTarget = overId === `category-${type}`;
+
           return (
             <div key={type} className="border-b border-slate-700/30">
-              {/* Group Header */}
-              <div
-                className={cn(
-                  "flex items-center gap-1.5 px-2 h-[24px]",
-                  "bg-[#252b3b] cursor-pointer hover:bg-[#2a3142]",
-                  "border-b border-slate-700/50 group"
-                )}
-                onClick={() => toggleGroup(type)}
-              >
-                <span className="text-[8px] text-slate-400 w-3">
-                  {isExpanded ? <ChevronDown className="w-2.5 h-2.5" /> : <ChevronRight className="w-2.5 h-2.5" />}
-                </span>
-                <Checkbox
-                  checked={isGroupFullySelected}
-                  ref={(el) => {
-                    if (el) (el as HTMLButtonElement & { indeterminate: boolean }).indeterminate = isGroupPartiallySelected;
-                  }}
-                  onCheckedChange={() => toggleGroupSelection(type)}
-                  onClick={(e) => e.stopPropagation()}
-                  className="h-3 w-3"
-                />
-                <span
-                  className="w-4 h-4 flex items-center justify-center rounded text-[10px]"
-                  style={{ backgroundColor: meta.color }}
+              {/* Group Header - Droppable */}
+              <DroppableCategory type={type} isOver={isDropTarget}>
+                <div
+                  className={cn(
+                    "flex items-center gap-2 px-3 h-[28px]",
+                    "bg-gradient-to-r from-slate-800/80 to-slate-800/40",
+                    "cursor-pointer hover:from-slate-700/80 hover:to-slate-700/40",
+                    "border-b border-slate-700/50 border-l-2",
+                    isDropTarget ? "border-l-blue-500 from-blue-500/20" : "border-l-slate-600",
+                    "transition-all duration-150 group"
+                  )}
+                  onClick={() => toggleGroup(type)}
                 >
-                  {meta.icon}
-                </span>
-                <span className="text-[10px] font-semibold text-slate-300">
-                  {type}
-                </span>
-                <span className="text-[9px] text-slate-400">({categoryTools.length})</span>
-                <div className="flex-1" />
-                <button
-                  className="text-slate-400 hover:text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={(e) => { e.stopPropagation(); }}
-                >
-                  <Settings className="w-3 h-3" />
-                </button>
-              </div>
-
-              {/* Group Rows */}
-              {isExpanded && categoryTools.map((tool, localIndex) => {
-                globalRowNumber++;
-                const rowNum = globalRowNumber;
-                const isSelected = (selectedToolId || state.selectedToolId) === tool.id;
-                const isRowChecked = selectedRows.has(tool.id);
-                const isHovered = hoveredRow === tool.id;
-                const typeColor = getTypeColor(tool.type);
-                const owner = getOwner(tool);
-                const access = getAccessIcon(tool);
-                const statusDisplay = getStatusDisplay(tool.status);
-                const AccessIcon = access.icon;
-
-                return (
-                  <div
-                    key={tool.id}
-                    className={cn(
-                      "grid items-center gap-0 px-2 h-[22px] min-h-[22px] group",
-                      "border-b border-slate-700/30",
-                      "cursor-pointer transition-colors",
-                      isSelected
-                        ? "bg-cyan-500/20 border-l-2 border-l-cyan-400"
-                        : isRowChecked
-                          ? "bg-cyan-500/10"
-                          : "hover:bg-white/5 border-l-2 border-l-transparent",
-                      localIndex % 2 === 1 && !isSelected && !isRowChecked && "bg-white/[0.02]"
-                    )}
-                    style={{ gridTemplateColumns }}
-                    onClick={() => handleSelectRow(tool.id)}
-                    onMouseEnter={() => setHoveredRow(tool.id)}
-                    onMouseLeave={() => setHoveredRow(null)}
+                  <span className={cn(
+                    "text-slate-400 transition-transform duration-150",
+                    isExpanded && "text-slate-300"
+                  )}>
+                    {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                  </span>
+                  <Checkbox
+                    checked={isGroupFullySelected}
+                    ref={(el) => {
+                      if (el) (el as HTMLButtonElement & { indeterminate: boolean }).indeterminate = isGroupPartiallySelected;
+                    }}
+                    onCheckedChange={() => toggleGroupSelection(type)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="h-3.5 w-3.5 border-slate-500 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                  />
+                  <span
+                    className="w-5 h-5 flex items-center justify-center rounded text-[11px] shadow-sm"
+                    style={{ backgroundColor: meta.color }}
                   >
-                    {/* Row Number */}
-                    <div className="flex justify-center items-center px-1">
-                      <span className="text-[9px] text-slate-400 font-mono">{rowNum}</span>
-                    </div>
+                    {meta.icon}
+                  </span>
+                  <span className="text-[11px] font-semibold text-slate-200">
+                    {type}
+                  </span>
+                  <span className="text-[10px] text-slate-500 bg-white/5 px-1.5 py-0.5 rounded-full">
+                    {categoryTools.length}
+                  </span>
+                  {isDropTarget && (
+                    <span className="text-[9px] text-blue-400 bg-blue-500/20 px-2 py-0.5 rounded animate-pulse">
+                      Drop here
+                    </span>
+                  )}
+                  <div className="flex-1" />
+                  <button
+                    className="text-slate-500 hover:text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => { e.stopPropagation(); }}
+                  >
+                    <Settings className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </DroppableCategory>
 
-                    {/* Checkbox */}
-                    <div className="flex justify-center items-center">
-                      <Checkbox
-                        checked={isRowChecked}
-                        onCheckedChange={() => toggleRowSelection(tool.id)}
-                        onClick={(e) => e.stopPropagation()}
-                        className="h-3 w-3"
+              {/* Group Rows - Sortable */}
+              {isExpanded && (
+                <SortableContext items={categoryTools.map(t => t.id)} strategy={verticalListSortingStrategy}>
+                  {categoryTools.map((tool, localIndex) => {
+                    globalRowNumber++;
+                    const rowNum = globalRowNumber;
+                    const isSelected = (selectedToolId || state.selectedToolId) === tool.id;
+                    const isRowChecked = selectedRows.has(tool.id);
+                    const isHovered = hoveredRow === tool.id;
+
+                    return (
+                      <DraggableRow
+                        key={tool.id}
+                        tool={tool}
+                        rowNum={rowNum}
+                        isSelected={isSelected}
+                        isRowChecked={isRowChecked}
+                        isHovered={isHovered}
+                        gridTemplateColumns={gridTemplateColumns}
+                        onSelect={() => handleSelectRow(tool.id)}
+                        onHover={setHoveredRow}
+                        onTogglePin={handleTogglePin}
+                        onCopyUrl={handleCopyUrl}
+                        onDelete={handleDelete}
+                        onToggleRowSelection={() => toggleRowSelection(tool.id)}
+                        onOpenLabelDialog={handleOpenLabelDialog}
+                        localIndex={localIndex}
                       />
-                    </div>
-
-                    {/* Icon */}
-                    <div className="flex justify-center items-center">
-                      <button
-                        className={cn(
-                          "w-5 h-5 flex items-center justify-center rounded text-[9px] font-bold",
-                          tool.isPinned ? "text-yellow-500" : ""
-                        )}
-                        style={{ backgroundColor: typeColor.bg, color: typeColor.text }}
-                        onClick={(e) => handleTogglePin(tool, e)}
-                      >
-                        {tool.isPinned ? (
-                          <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
-                        ) : (
-                          tool.icon || tool.name.substring(0, 2)
-                        )}
-                      </button>
-                    </div>
-
-                    {/* Name */}
-                    <div className="flex items-center gap-1 min-w-0 px-1">
-                      <span className="text-[10px] font-medium text-slate-200 truncate">
-                        {tool.name}
-                      </span>
-                      {isHovered && (
-                        <a
-                          href={tool.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex-shrink-0 text-slate-400 hover:text-cyan-400"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <ExternalLink className="w-2.5 h-2.5" />
-                        </a>
-                      )}
-                    </div>
-
-                    {/* Type badge */}
-                    <div className="flex items-center px-1">
-                      <span
-                        className="text-[8px] font-semibold px-1.5 py-0.5 rounded truncate uppercase"
-                        style={{ backgroundColor: typeColor.bg, color: typeColor.text }}
-                      >
-                        {tool.type}
-                      </span>
-                    </div>
-
-                    {/* Status */}
-                    <div className="flex items-center gap-1 px-1">
-                      <span className="text-[9px]" style={{ color: statusDisplay.color }}>
-                        {statusDisplay.icon}
-                      </span>
-                      <span className="text-[9px] text-slate-500 truncate">
-                        {statusDisplay.label}
-                      </span>
-                    </div>
-
-                    {/* Description */}
-                    <div className="flex items-center min-w-0 px-1">
-                      <span className="text-[9px] text-slate-400 truncate">
-                        {tool.summary}
-                      </span>
-                    </div>
-
-                    {/* Tags */}
-                    <div className="flex items-center gap-0.5 overflow-hidden px-1">
-                      {tool.tags?.slice(0, 2).map(tag => {
-                        const tagColor = getTagColor(tag);
-                        return (
-                          <span
-                            key={tag}
-                            className="text-[7px] font-medium px-1 py-0.5 rounded truncate"
-                            style={{ backgroundColor: tagColor.bg, color: tagColor.text }}
-                          >
-                            {tag}
-                          </span>
-                        );
-                      })}
-                      {tool.tags && tool.tags.length > 2 && (
-                        <span className="text-[7px] text-slate-400">+{tool.tags.length - 2}</span>
-                      )}
-                    </div>
-
-                    {/* Source */}
-                    <div className="flex items-center gap-1 px-1">
-                      <span className="text-[8px]">🔗</span>
-                      <span className="text-[9px] text-slate-500 truncate">{getSourceDomain(tool.url)}</span>
-                    </div>
-
-                    {/* Rating (stars) */}
-                    <div className="flex justify-center items-center">
-                      <span className="text-[8px] text-yellow-500 tracking-[-1px]">
-                        {'★'.repeat(Math.min(5, Math.ceil((tool.usage || 50) / 20)))}
-                        {'☆'.repeat(5 - Math.min(5, Math.ceil((tool.usage || 50) / 20)))}
-                      </span>
-                    </div>
-
-                    {/* Access */}
-                    <div className="flex justify-center items-center">
-                      <AccessIcon className="w-3 h-3" style={{ color: access.color }} />
-                    </div>
-
-                    {/* Owner */}
-                    <div className="flex justify-center items-center">
-                      <div
-                        className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-semibold text-white"
-                        style={{ backgroundColor: owner.color }}
-                        title={owner.name}
-                      >
-                        {owner.initials}
-                      </div>
-                    </div>
-
-                    {/* Modified */}
-                    <div className="flex justify-center items-center">
-                      <span className="text-[9px] text-slate-400">{formatModified(tool.createdAt)}</span>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex justify-center items-center">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className={cn(
-                              "h-4 w-4 text-slate-400 hover:text-slate-600",
-                              "opacity-0 group-hover:opacity-100 transition-opacity"
-                            )}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <MoreHorizontal className="w-3 h-3" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-32">
-                          <DropdownMenuItem
-                            onClick={(e) => { e.stopPropagation(); handleTogglePin(tool, e as unknown as React.MouseEvent); }}
-                            className="text-[10px]"
-                          >
-                            <Pin className="w-3 h-3 mr-2" />
-                            {tool.isPinned ? 'Unpin' : 'Pin'}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={(e) => handleCopyUrl(tool, e as unknown as React.MouseEvent)}
-                            className="text-[10px]"
-                          >
-                            <Copy className="w-3 h-3 mr-2" />
-                            Copy URL
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-[10px]">
-                            <Edit className="w-3 h-3 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={(e) => handleDelete(tool, e as unknown as React.MouseEvent)}
-                            className="text-[10px] text-red-600 focus:text-red-600"
-                          >
-                            <Trash className="w-3 h-3 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-                );
-              })}
+                    );
+                  })}
+                </SortableContext>
+              )}
             </div>
           );
         })}
 
         {/* Empty state */}
         {sortedTools.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-slate-400">
-            <p className="text-sm">No tools found</p>
-            {state.searchQuery && (
-              <p className="text-xs mt-1">Try adjusting your search or filter terms</p>
+          <div className="flex flex-col items-center justify-center h-full min-h-[200px] py-12">
+            <div className="text-5xl mb-4 opacity-50">🔍</div>
+            <p className="text-sm font-medium text-slate-300">No tools found</p>
+            {state.searchQuery ? (
+              <p className="text-xs text-slate-500 mt-2 text-center max-w-[280px]">
+                Try adjusting your search or filter terms to find what you're looking for
+              </p>
+            ) : (
+              <p className="text-xs text-slate-500 mt-2 text-center max-w-[280px]">
+                Add your first AI tool to get started
+              </p>
             )}
           </div>
         )}
       </div>
+
+      {/* Drag Overlay */}
+      <DragOverlay>
+        {activeTool && (
+          <div
+            className="flex items-center gap-2 px-3 py-2 bg-slate-800/95 rounded-lg border border-blue-500/50 shadow-xl"
+            style={{ width: '280px' }}
+          >
+            <span
+              className="w-5 h-5 flex items-center justify-center rounded text-[9px] font-bold"
+              style={{ backgroundColor: getTypeColor(activeTool.type).bg, color: getTypeColor(activeTool.type).text }}
+            >
+              {activeTool.icon || activeTool.name.substring(0, 2)}
+            </span>
+            <span className="text-[11px] font-medium text-white truncate">
+              {activeTool.name}
+            </span>
+            <span
+              className="text-[8px] font-semibold px-1.5 py-0.5 rounded uppercase ml-auto"
+              style={{
+                backgroundColor: `${getTypeColor(activeTool.type).bg}50`,
+                color: getTypeColor(activeTool.type).text,
+              }}
+            >
+              {activeTool.type}
+            </span>
+          </div>
+        )}
+      </DragOverlay>
     </div>
+    </DndContext>
+
+    {/* Custom Label Dialog */}
+    <Dialog open={labelDialogOpen} onOpenChange={setLabelDialogOpen}>
+      <DialogContent className="sm:max-w-[400px] bg-slate-900 border-slate-700">
+        <DialogHeader>
+          <DialogTitle className="text-slate-100 flex items-center gap-2">
+            <Tag className="w-4 h-4 text-purple-400" />
+            Manage Labels
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          {labelDialogTool && (
+            <>
+              <p className="text-[11px] text-slate-400">
+                Add custom labels to <span className="text-white font-medium">{labelDialogTool.name}</span>
+              </p>
+
+              {/* Current Labels */}
+              {labelDialogTool.customLabels && labelDialogTool.customLabels.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {labelDialogTool.customLabels.map(label => {
+                    const labelColor = getLabelColor(label);
+                    return (
+                      <span
+                        key={label}
+                        className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded group"
+                        style={{ backgroundColor: labelColor.bg, color: labelColor.text }}
+                      >
+                        {label}
+                        <button
+                          onClick={() => handleRemoveLabel(label)}
+                          className="opacity-60 hover:opacity-100 transition-opacity"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Add New Label */}
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter label name..."
+                  value={newLabel}
+                  onChange={(e) => setNewLabel(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddLabel()}
+                  className="flex-1 h-8 text-[11px] bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                />
+                <Button
+                  size="sm"
+                  onClick={handleAddLabel}
+                  disabled={!newLabel.trim()}
+                  className="h-8 px-3 bg-purple-600 hover:bg-purple-700 text-white"
+                >
+                  <Plus className="w-3 h-3 mr-1" />
+                  Add
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setLabelDialogOpen(false)}
+            className="text-[10px] border-slate-600 text-slate-300 hover:bg-slate-800"
+          >
+            Done
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
 

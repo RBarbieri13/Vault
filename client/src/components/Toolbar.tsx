@@ -156,13 +156,14 @@ export function Toolbar({
             variant="ghost"
             size="sm"
             className={cn(
-              "h-6 px-2 text-[10px] font-medium gap-1",
-              "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+              "h-6 px-2.5 text-[10px] font-medium gap-1.5",
+              "text-slate-300 hover:text-white hover:bg-white/10",
+              "transition-colors"
             )}
           >
             <Table className="w-3 h-3" />
             View
-            <ChevronDown className="w-2.5 h-2.5 opacity-50" />
+            <ChevronDown className="w-2.5 h-2.5 text-slate-400" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-32">
@@ -200,13 +201,14 @@ export function Toolbar({
             variant="ghost"
             size="sm"
             className={cn(
-              "h-6 px-2 text-[10px] font-medium gap-1",
-              "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+              "h-6 px-2.5 text-[10px] font-medium gap-1.5",
+              "text-slate-300 hover:text-white hover:bg-white/10",
+              "transition-colors"
             )}
           >
             <Columns className="w-3 h-3" />
             Columns
-            <ChevronDown className="w-2.5 h-2.5 opacity-50" />
+            <ChevronDown className="w-2.5 h-2.5 text-slate-400" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-36">
@@ -234,19 +236,20 @@ export function Toolbar({
             variant="ghost"
             size="sm"
             className={cn(
-              "h-6 px-2 text-[10px] font-medium gap-1",
-              "text-slate-400 hover:text-slate-200 hover:bg-white/5",
-              hasActiveFilters && "text-cyan-400"
+              "h-6 px-2.5 text-[10px] font-medium gap-1.5",
+              "text-slate-300 hover:text-white hover:bg-white/10",
+              "transition-colors",
+              hasActiveFilters && "text-blue-400 bg-blue-500/10"
             )}
           >
             <Filter className="w-3 h-3" />
             Filter
             {activeFilterCount > 0 && (
-              <span className="ml-0.5 text-[8px] px-1 py-0.5 bg-cyan-500 text-white rounded-full">
+              <span className="ml-1 text-[8px] px-1.5 py-0.5 bg-blue-500 text-white rounded-full font-semibold min-w-[18px] text-center">
                 {activeFilterCount}
               </span>
             )}
-            <ChevronDown className="w-2.5 h-2.5 opacity-50" />
+            <ChevronDown className="w-2.5 h-2.5 text-slate-400" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52">
@@ -316,13 +319,14 @@ export function Toolbar({
             variant="ghost"
             size="sm"
             className={cn(
-              "h-6 px-2 text-[10px] font-medium gap-1",
-              "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+              "h-6 px-2.5 text-[10px] font-medium gap-1.5",
+              "text-slate-300 hover:text-white hover:bg-white/10",
+              "transition-colors"
             )}
           >
             <ArrowUpDown className="w-3 h-3" />
             Sort
-            <ChevronDown className="w-2.5 h-2.5 opacity-50" />
+            <ChevronDown className="w-2.5 h-2.5 text-slate-400" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-36">
@@ -370,13 +374,14 @@ export function Toolbar({
             variant="ghost"
             size="sm"
             className={cn(
-              "h-6 px-2 text-[10px] font-medium gap-1",
-              "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+              "h-6 px-2.5 text-[10px] font-medium gap-1.5",
+              "text-slate-300 hover:text-white hover:bg-white/10",
+              "transition-colors"
             )}
           >
             <Layers className="w-3 h-3" />
             Group
-            <ChevronDown className="w-2.5 h-2.5 opacity-50" />
+            <ChevronDown className="w-2.5 h-2.5 text-slate-400" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-36">
@@ -411,13 +416,14 @@ export function Toolbar({
             variant="ghost"
             size="sm"
             className={cn(
-              "h-6 px-2 text-[10px] font-medium gap-1",
-              "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+              "h-6 px-2.5 text-[10px] font-medium gap-1.5",
+              "text-slate-300 hover:text-white hover:bg-white/10",
+              "transition-colors"
             )}
           >
             <Download className="w-3 h-3" />
             Export
-            <ChevronDown className="w-2.5 h-2.5 opacity-50" />
+            <ChevronDown className="w-2.5 h-2.5 text-slate-400" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-36">
@@ -436,13 +442,14 @@ export function Toolbar({
             variant="ghost"
             size="sm"
             className={cn(
-              "h-6 px-2 text-[10px] font-medium gap-1",
-              "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+              "h-6 px-2.5 text-[10px] font-medium gap-1.5",
+              "text-slate-300 hover:text-white hover:bg-white/10",
+              "transition-colors"
             )}
           >
             <Bookmark className="w-3 h-3" />
             My Filters
-            <ChevronDown className="w-2.5 h-2.5 opacity-50" />
+            <ChevronDown className="w-2.5 h-2.5 text-slate-400" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-40">
@@ -508,14 +515,18 @@ export function Toolbar({
           <Button
             size="sm"
             className={cn(
-              "h-6 px-3 text-[10px] font-medium gap-1.5",
-              "bg-cyan-600 hover:bg-cyan-500 text-white",
-              "shadow-sm shadow-cyan-500/20"
+              "h-6 px-3.5 text-[10px] font-semibold gap-1.5",
+              "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500",
+              "text-white",
+              "shadow-md shadow-blue-500/30",
+              "transition-all duration-150",
+              "hover:shadow-lg hover:shadow-blue-500/40 hover:-translate-y-0.5",
+              "active:translate-y-0"
             )}
           >
-            <Plus className="w-3 h-3" />
+            <Plus className="w-3.5 h-3.5" />
             Add
-            <ChevronDown className="w-2.5 h-2.5 opacity-70" />
+            <ChevronDown className="w-2.5 h-2.5 opacity-80" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">

@@ -83,12 +83,14 @@ export function ToolDetails({ tool: propTool, onClose }: ToolDetailsProps) {
 
   if (!selectedTool) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-6 text-center text-slate-400">
-        <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3">
-          <Hash className="w-5 h-5 text-slate-300 dark:text-slate-600" />
+      <div className="h-full flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-14 h-14 rounded-xl bg-slate-800/60 border border-slate-700/50 flex items-center justify-center mb-4">
+          <Hash className="w-6 h-6 text-slate-500" />
         </div>
-        <h3 className="text-sm font-medium text-slate-600 dark:text-slate-300">No tool selected</h3>
-        <p className="text-xs mt-1 max-w-[200px]">Select a tool from the list to view details</p>
+        <h3 className="text-sm font-medium text-slate-300 mb-1">No tool selected</h3>
+        <p className="text-[11px] text-slate-500 max-w-[180px] leading-relaxed">
+          Select a tool from the list to view its details
+        </p>
       </div>
     );
   }
@@ -129,17 +131,17 @@ export function ToolDetails({ tool: propTool, onClose }: ToolDetailsProps) {
   return (
     <TooltipProvider>
       <div className="h-full flex flex-col overflow-hidden bg-[#1e2433]">
-        {/* Header */}
-        <div className="flex items-start justify-between p-3 border-b border-slate-700/50">
-          <h2 className="text-sm font-semibold text-white truncate flex items-center gap-1.5">
-            {selectedTool.icon && <span>{selectedTool.icon}</span>}
-            {selectedTool.name}
+        {/* Header - Enhanced with gradient background */}
+        <div className="flex items-start justify-between p-3 border-b border-slate-700/50 bg-gradient-to-r from-slate-800/60 to-transparent">
+          <h2 className="text-sm font-semibold text-white truncate flex items-center gap-2">
+            {selectedTool.icon && <span className="text-base">{selectedTool.icon}</span>}
+            <span className="truncate">{selectedTool.name}</span>
           </h2>
           {onClose && (
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 text-slate-400 hover:text-white hover:bg-white/10"
+              className="h-6 w-6 text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
               onClick={onClose}
             >
               <X className="w-4 h-4" />
@@ -149,125 +151,151 @@ export function ToolDetails({ tool: propTool, onClose }: ToolDetailsProps) {
 
         {/* Content - Compact Field List */}
         <div className="flex-1 overflow-auto thin-scrollbar p-3">
-          <div className="space-y-3">
-            {/* Type */}
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider">Type</span>
+          <div className="space-y-2.5">
+            {/* Type & Status Row */}
+            <div className="flex items-center gap-2">
               <span
-                className="text-[9px] font-semibold px-1.5 py-0.5 rounded uppercase"
-                style={{ backgroundColor: typeColor.bg, color: typeColor.text }}
+                className="text-[9px] font-semibold px-2 py-0.5 rounded uppercase border"
+                style={{
+                  backgroundColor: `${typeColor.bg}50`,
+                  color: typeColor.text,
+                  borderColor: `${typeColor.text}30`
+                }}
               >
                 {selectedTool.type}
               </span>
-            </div>
-
-            {/* Status */}
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider">Status</span>
               <span
-                className="text-[9px] font-medium px-1.5 py-0.5 rounded flex items-center gap-1"
-                style={{ backgroundColor: statusColor.bg, color: statusColor.text }}
+                className="text-[9px] font-medium px-2 py-0.5 rounded flex items-center gap-1 border"
+                style={{
+                  backgroundColor: `${statusColor.bg}40`,
+                  color: statusColor.text,
+                  borderColor: `${statusColor.text}30`
+                }}
               >
-                <span>{statusDisplay.icon}</span>
+                <span className="text-[8px]">{statusDisplay.icon}</span>
                 {statusDisplay.label}
               </span>
             </div>
 
-            {/* Description */}
-            <div>
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Description</span>
-              <p className="text-[10px] text-slate-300 leading-relaxed">
+            {/* Description - with better visual separation */}
+            <div className="pt-2">
+              <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-[0.05em] block mb-1.5">Description</span>
+              <p className="text-[11px] text-slate-200 leading-relaxed">
                 {selectedTool.whatItIs || selectedTool.summary}
               </p>
             </div>
 
-            {/* Tags */}
+            {/* Tags - with styled chips */}
             <div>
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Tags</span>
-              <div className="text-[10px] text-slate-300">
-                {selectedTool.tags?.join(', ') || 'No tags'}
+              <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-[0.05em] block mb-1.5">Tags</span>
+              <div className="flex flex-wrap gap-1">
+                {selectedTool.tags?.length ? (
+                  selectedTool.tags.map((tag, idx) => {
+                    const tagColor = getTagColor(tag);
+                    return (
+                      <span
+                        key={idx}
+                        className="text-[9px] px-1.5 py-0.5 rounded border"
+                        style={{
+                          backgroundColor: `${tagColor.bg}40`,
+                          color: tagColor.text,
+                          borderColor: `${tagColor.text}30`
+                        }}
+                      >
+                        {tag}
+                      </span>
+                    );
+                  })
+                ) : (
+                  <span className="text-[10px] text-slate-500 italic">No tags</span>
+                )}
               </div>
             </div>
 
-            {/* Source */}
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider">Source</span>
-              <a
-                href={selectedTool.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[10px] text-cyan-400 flex items-center gap-1 hover:underline"
-              >
-                <Link2 className="w-3 h-3" />
-                {getSourceDomain(selectedTool.url)}
-              </a>
+            {/* Metadata Section */}
+            <div className="pt-2 mt-2 border-t border-slate-700/30 space-y-2">
+              {/* Source */}
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-medium text-slate-500 uppercase tracking-wider">Source</span>
+                <a
+                  href={selectedTool.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[10px] text-blue-400 flex items-center gap-1 hover:text-blue-300 hover:underline transition-colors"
+                >
+                  <Link2 className="w-3 h-3" />
+                  {getSourceDomain(selectedTool.url)}
+                </a>
+              </div>
+
+              {/* Rating */}
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-medium text-slate-500 uppercase tracking-wider">Rating</span>
+                <span className="text-[11px] text-amber-400 tracking-tight">
+                  {'★'.repeat(Math.min(5, Math.ceil((selectedTool.usage || 50) / 20)))}
+                  <span className="text-slate-600">{'★'.repeat(5 - Math.min(5, Math.ceil((selectedTool.usage || 50) / 20)))}</span>
+                </span>
+              </div>
+
+              {/* Access */}
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-medium text-slate-500 uppercase tracking-wider">Access</span>
+                <span className="text-[10px] text-slate-200 flex items-center gap-1.5">
+                  <Globe className="w-3 h-3 text-emerald-400" />
+                  {getAccessLabel(selectedTool)}
+                </span>
+              </div>
+
+              {/* Owner */}
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-medium text-slate-500 uppercase tracking-wider">Owner</span>
+                <span className="text-[10px] text-slate-200 flex items-center gap-1.5">
+                  <Users className="w-3 h-3 text-slate-400" />
+                  {getOwner(selectedTool)}
+                </span>
+              </div>
+
+              {/* Date Added */}
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-medium text-slate-500 uppercase tracking-wider">Added</span>
+                <span className="text-[10px] text-slate-200 flex items-center gap-1.5">
+                  <Calendar className="w-3 h-3 text-slate-400" />
+                  {formatDate(selectedTool.createdAt)}
+                </span>
+              </div>
+
+              {/* Last Modified */}
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-medium text-slate-500 uppercase tracking-wider">Modified</span>
+                <span className="text-[10px] text-slate-300">
+                  {formatRelativeTime(selectedTool.createdAt)}
+                </span>
+              </div>
             </div>
 
-            {/* Rating */}
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider">Rating</span>
-              <span className="text-[10px] text-yellow-500">
-                {'★'.repeat(Math.min(5, Math.ceil((selectedTool.usage || 50) / 20)))}
-                {'☆'.repeat(5 - Math.min(5, Math.ceil((selectedTool.usage || 50) / 20)))}
-              </span>
-            </div>
-
-            {/* Access */}
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider">Access</span>
-              <span className="text-[10px] text-slate-300 flex items-center gap-1">
-                <Globe className="w-3 h-3 text-green-500" />
-                {getAccessLabel(selectedTool)}
-              </span>
-            </div>
-
-            {/* Owner */}
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider">Owner</span>
-              <span className="text-[10px] text-slate-300">
-                {getOwner(selectedTool)}
-              </span>
-            </div>
-
-            {/* Date Added */}
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider">Date Added</span>
-              <span className="text-[10px] text-slate-300">
-                {formatDate(selectedTool.createdAt)}
-              </span>
-            </div>
-
-            {/* Last Modified */}
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider">Last Modified</span>
-              <span className="text-[10px] text-slate-300">
-                {formatRelativeTime(selectedTool.createdAt)}
-              </span>
-            </div>
-
-            {/* Trend & Usage */}
-            <div className="pt-2 border-t border-slate-700/50">
+            {/* Trend & Usage - Enhanced card styling */}
+            <div className="pt-3 mt-1 border-t border-slate-700/30">
               <div className="grid grid-cols-2 gap-2">
-                <div className="p-2 rounded bg-slate-800/50">
-                  <div className="text-[9px] text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1">
-                    <TrendingUp className="w-2.5 h-2.5" />
+                <div className="p-2.5 rounded-md bg-slate-800/60 border border-slate-700/40">
+                  <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3 text-emerald-400" />
                     Trend
                   </div>
                   <Sparkline
                     data={selectedTool.trend || [5, 5, 5, 5, 5, 5, 5]}
                     width={60}
-                    height={16}
-                    strokeWidth={1}
+                    height={18}
+                    strokeWidth={1.5}
                   />
                 </div>
-                <div className="p-2 rounded bg-slate-800/50">
-                  <div className="text-[9px] text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1">
-                    <Activity className="w-2.5 h-2.5" />
+                <div className="p-2.5 rounded-md bg-slate-800/60 border border-slate-700/40">
+                  <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                    <Activity className="w-3 h-3 text-blue-400" />
                     Usage
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <UsageBar value={selectedTool.usage || 50} width={40} height={4} />
-                    <span className="text-[9px] font-medium text-slate-300">
+                  <div className="flex items-center gap-2">
+                    <UsageBar value={selectedTool.usage || 50} width={45} height={5} />
+                    <span className="text-[10px] font-semibold text-slate-200">
                       {selectedTool.usage || 50}%
                     </span>
                   </div>
@@ -277,12 +305,57 @@ export function ToolDetails({ tool: propTool, onClose }: ToolDetailsProps) {
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2 p-3 border-t border-slate-700/50">
+        {/* Action Buttons - Enhanced styling */}
+        <div className="flex items-center gap-2 p-3 border-t border-slate-700/50 bg-slate-900/30">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
+                onClick={handleCopyLink}
+              >
+                <Copy className="w-3.5 h-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-[10px]">Copy URL</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "h-7 w-7 p-0 transition-colors",
+                  selectedTool.isPinned
+                    ? "text-amber-400 hover:text-amber-300 hover:bg-amber-500/10"
+                    : "text-slate-400 hover:text-amber-400 hover:bg-amber-500/10"
+                )}
+                onClick={handleTogglePin}
+              >
+                <Star className={cn("w-3.5 h-3.5", selectedTool.isPinned && "fill-current")} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-[10px]">{selectedTool.isPinned ? 'Unpin' : 'Pin'}</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <a
+                href={selectedTool.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="h-7 w-7 p-0 inline-flex items-center justify-center rounded-md text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-[10px]">Open URL</TooltipContent>
+          </Tooltip>
+          <div className="flex-1" />
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 h-7 text-[10px] bg-transparent border-slate-600 text-slate-300 hover:bg-white/5 hover:text-white"
+            className="h-7 px-3 text-[10px] bg-transparent border-slate-600 text-slate-300 hover:bg-white/5 hover:text-white hover:border-slate-500 transition-colors"
             onClick={() => setIsEditModalOpen(true)}
           >
             <Edit2 className="w-3 h-3 mr-1.5" />
@@ -291,7 +364,7 @@ export function ToolDetails({ tool: propTool, onClose }: ToolDetailsProps) {
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 h-7 text-[10px] bg-transparent border-red-500/50 text-red-400 hover:bg-red-500/10 hover:text-red-400"
+            className="h-7 px-3 text-[10px] bg-transparent border-red-500/40 text-red-400 hover:bg-red-500/10 hover:border-red-500/60 transition-colors"
             onClick={handleDelete}
           >
             <Trash2 className="w-3 h-3 mr-1.5" />
