@@ -50,6 +50,24 @@ export type Collection = {
   sortOrder: number;
 };
 
+export type SortField = 'name' | 'type' | 'status' | 'date' | 'rating' | 'usage';
+export type SortDirection = 'asc' | 'desc';
+export type GroupBy = 'type' | 'status' | 'category' | 'none';
+
+export type VisibleColumns = {
+  icon: boolean;
+  name: boolean;
+  type: boolean;
+  status: boolean;
+  desc: boolean;
+  tags: boolean;
+  source: boolean;
+  rating: boolean;
+  access: boolean;
+  owner: boolean;
+  modified: boolean;
+};
+
 export type AppState = {
   categories: Category[];
   tools: Record<string, Tool>; // Normalized for easier lookup
@@ -67,6 +85,11 @@ export type AppState = {
   contentTypeFilter: ContentType | 'all';
   selectedNavSection: string | null;
   lastSyncTime: Date | null;
+  // Sort and group state
+  sortField: SortField;
+  sortDirection: SortDirection;
+  groupBy: GroupBy;
+  visibleColumns: VisibleColumns;
 };
 
 // Navigation item for hierarchical sidebar

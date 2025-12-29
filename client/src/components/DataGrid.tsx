@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { useApp } from '@/lib/store';
 import { cn } from '@/lib/utils';
-import { Tool, getTypeColor, getTagColor } from '@/lib/data';
+import { Tool, getTypeColor, getTagColor, SortField, GroupBy } from '@/lib/data';
 import { MiniSparkline } from './Sparkline';
 import {
   Star,
@@ -120,12 +120,6 @@ const columns: Column[] = [
   { id: 'actions', label: '', width: '28px', align: 'center' },
 ];
 
-type SortDirection = 'asc' | 'desc' | null;
-
-interface SortState {
-  column: string;
-  direction: SortDirection;
-}
 
 interface DataGridProps {
   tools?: Tool[];
@@ -160,7 +154,6 @@ export function DataGrid({
   onSelectionChange,
 }: DataGridProps) {
   const { state, dispatch, apiMutations } = useApp();
-  const [sortState, setSortState] = useState<SortState>({ column: 'name', direction: 'asc' });
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
     CHATBOT: true,
@@ -174,6 +167,20 @@ export function DataGrid({
     CREATIVE: true,
     RESEARCH: true,
     SEARCH: true,
+    // Status groups
+    active: true,
+    beta: true,
+    deprecated: true,
+    inactive: true,
+    // Category groups
+    chatbots: true,
+    image: true,
+    video: true,
+    audio: true,
+    development: true,
+    automation: true,
+    writing: true,
+    research: true,
   });
   const [internalSelectedRows, setInternalSelectedRows] = useState<Set<string>>(new Set());
 
@@ -183,19 +190,44 @@ export function DataGrid({
 
   // Use provided tools or fall back to state
   const allTools = propTools || Object.values(state.tools);
+  
+  // Get sort and group settings from global state
+  const { sortField, sortDirection, groupBy, visibleColumns } = state;
 
   // Filter tools based on search query and filters
   const filteredTools = useMemo(() => {
     let tools = allTools;
 
+    // Enhanced multi-token search across multiple fields
     if (state.searchQuery.trim()) {
-      const query = state.searchQuery.toLowerCase();
-      tools = tools.filter(tool =>
-        tool.name.toLowerCase().includes(query) ||
-        tool.type.toLowerCase().includes(query) ||
-        tool.summary.toLowerCase().includes(query) ||
-        tool.tags?.some(tag => tag.toLowerCase().includes(query))
-      );
+      const tokens = state.searchQuery.toLowerCase().split(/\s+/).filter(t => t.length > 0);
+      
+      tools = tools.filter(tool => {
+        // Build searchable text from all relevant fields
+        const searchableFields: string[] = [
+          tool.name,
+          tool.type,
+          tool.summary,
+          tool.url,
+          tool.whatItIs,
+          tool.capabilities,
+          tool.bestFor,
+          tool.notes,
+          tool.status,
+          tool.categoryId,
+          ...(tool.tags || []),
+        ].filter((f): f is string => typeof f === 'string' && f.length > 0);
+        
+        const searchableText = searchableFields.map(f => f.toLowerCase()).join(' ');
+        
+        // All tokens must match somewhere in the searchable text
+        return tokens.every(token => searchableText.includes(token));
+      });
+    }
+    
+    // Filter for pinned tools if activeFilter is 'pinned'
+    if (state.activeFilter === 'pinned') {
+      tools = tools.filter(t => t.isPinned);
     }
 
     if (state.typeFilter !== 'all') {
@@ -232,41 +264,65 @@ export function DataGrid({
     }
 
     return tools;
-  }, [allTools, state.searchQuery, state.typeFilter, state.statusFilter, state.tagFilters, state.dateFilter]);
+  }, [allTools, state.searchQuery, state.typeFilter, state.statusFilter, state.tagFilters, state.dateFilter, state.activeFilter]);
 
-  // Sort tools
+  // Sort tools using global state
   const sortedTools = useMemo(() => {
-    if (!sortState.direction) return filteredTools;
-
     return [...filteredTools].sort((a, b) => {
       let comparison = 0;
-      switch (sortState.column) {
+      switch (sortField) {
         case 'name':
           comparison = a.name.localeCompare(b.name);
           break;
         case 'type':
           comparison = a.type.localeCompare(b.type);
           break;
+        case 'status':
+          comparison = (a.status || '').localeCompare(b.status || '');
+          break;
         case 'date':
           comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          break;
+        case 'rating':
+          comparison = (a.usage || 0) - (b.usage || 0);
+          break;
+        case 'usage':
+          comparison = (a.usage || 0) - (b.usage || 0);
           break;
         default:
           comparison = 0;
       }
-      return sortState.direction === 'desc' ? -comparison : comparison;
+      return sortDirection === 'desc' ? -comparison : comparison;
     });
-  }, [filteredTools, sortState]);
+  }, [filteredTools, sortField, sortDirection]);
 
-  // Group tools by type
+  // Group tools based on global groupBy state
   const groupedTools = useMemo(() => {
+    if (groupBy === 'none') {
+      return { 'All Tools': sortedTools };
+    }
+    
     const groups: Record<string, Tool[]> = {};
     sortedTools.forEach(tool => {
-      const type = tool.type || 'OTHER';
-      if (!groups[type]) groups[type] = [];
-      groups[type].push(tool);
+      let groupKey: string;
+      switch (groupBy) {
+        case 'type':
+          groupKey = tool.type || 'OTHER';
+          break;
+        case 'status':
+          groupKey = tool.status || 'unknown';
+          break;
+        case 'category':
+          groupKey = tool.categoryId || 'uncategorized';
+          break;
+        default:
+          groupKey = tool.type || 'OTHER';
+      }
+      if (!groups[groupKey]) groups[groupKey] = [];
+      groups[groupKey].push(tool);
     });
     return groups;
-  }, [sortedTools]);
+  }, [sortedTools, groupBy]);
 
   // Get sorted category order
   const sortedCategories = useMemo(() => {
@@ -278,12 +334,22 @@ export function DataGrid({
   }, [groupedTools]);
 
   const handleSort = (columnId: string) => {
-    setSortState(prev => {
-      if (prev.column !== columnId) return { column: columnId, direction: 'asc' };
-      if (prev.direction === 'asc') return { column: columnId, direction: 'desc' };
-      if (prev.direction === 'desc') return { column: columnId, direction: null };
-      return { column: columnId, direction: 'asc' };
-    });
+    // Map column IDs to sort fields
+    const columnToSortField: Record<string, SortField> = {
+      name: 'name',
+      type: 'type',
+      status: 'status',
+      date: 'date',
+      rating: 'rating',
+      modified: 'date',
+    };
+    
+    const newSortField = columnToSortField[columnId];
+    if (!newSortField) return;
+    
+    // Toggle direction if same field, otherwise start with asc
+    const newDirection = sortField === newSortField && sortDirection === 'asc' ? 'desc' : 'asc';
+    dispatch({ type: 'SET_SORT', payload: { field: newSortField, direction: newDirection } });
   };
 
   const toggleGroup = useCallback((type: string) => {
@@ -399,13 +465,13 @@ export function DataGrid({
                 {col.label}
                 {col.sortable && (
                   <span className="w-2.5 h-2.5 flex items-center justify-center">
-                    {sortState.column === col.id && sortState.direction === 'asc' && (
+                    {sortField === col.id && sortDirection === 'asc' && (
                       <ArrowUp className="w-2 h-2" />
                     )}
-                    {sortState.column === col.id && sortState.direction === 'desc' && (
+                    {sortField === col.id && sortDirection === 'desc' && (
                       <ArrowDown className="w-2 h-2" />
                     )}
-                    {(sortState.column !== col.id || !sortState.direction) && (
+                    {sortField !== col.id && (
                       <ArrowUpDown className="w-2 h-2 opacity-30" />
                     )}
                   </span>

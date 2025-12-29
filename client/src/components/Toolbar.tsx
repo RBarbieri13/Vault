@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useApp } from '@/lib/store';
 import { cn } from '@/lib/utils';
-import { typeColors, statusColors, tagColors, TOOL_TYPES, TOOL_STATUSES } from '@/lib/data';
+import { typeColors, statusColors, tagColors, TOOL_TYPES, TOOL_STATUSES, SortField, SortDirection, GroupBy, VisibleColumns, Tool } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import {
   ChevronDown,
@@ -53,19 +53,6 @@ export function Toolbar({
   className,
 }: ToolbarProps) {
   const { state, dispatch } = useApp();
-  const [columnsVisible, setColumnsVisible] = useState({
-    icon: true,
-    name: true,
-    type: true,
-    status: true,
-    desc: true,
-    tags: true,
-    source: true,
-    rating: true,
-    access: true,
-    owner: true,
-    modified: true,
-  });
 
   // Get unique tags from tools
   const allTags = useMemo(() => {
@@ -92,6 +79,68 @@ export function Toolbar({
 
   const handleClearFilters = () => {
     dispatch({ type: 'CLEAR_ALL_FILTERS' });
+  };
+
+  const handleSort = (field: SortField, direction: SortDirection) => {
+    dispatch({ type: 'SET_SORT', payload: { field, direction } });
+  };
+
+  const handleGroupBy = (groupBy: GroupBy) => {
+    dispatch({ type: 'SET_GROUP_BY', payload: { groupBy } });
+  };
+
+  const handleToggleColumn = (column: keyof VisibleColumns) => {
+    dispatch({ type: 'TOGGLE_COLUMN', payload: { column } });
+  };
+
+  const handleExport = (format: 'csv' | 'json' | 'markdown') => {
+    const tools = Object.values(state.tools);
+    let content: string;
+    let filename: string;
+    let mimeType: string;
+
+    switch (format) {
+      case 'csv': {
+        const headers = ['Name', 'Type', 'URL', 'Summary', 'Tags', 'Status', 'Usage'];
+        const rows = tools.map(t => [
+          t.name,
+          t.type,
+          t.url,
+          t.summary.replace(/,/g, ';'),
+          (t.tags || []).join(';'),
+          t.status,
+          t.usage?.toString() || ''
+        ]);
+        content = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+        filename = 'ai_tools.csv';
+        mimeType = 'text/csv';
+        break;
+      }
+      case 'json': {
+        content = JSON.stringify(tools, null, 2);
+        filename = 'ai_tools.json';
+        mimeType = 'application/json';
+        break;
+      }
+      case 'markdown': {
+        const header = '| Name | Type | URL | Summary | Status |\n|------|------|-----|---------|--------|\n';
+        const rows = tools.map(t => `| ${t.name} | ${t.type} | ${t.url} | ${t.summary.substring(0, 50)}... | ${t.status} |`);
+        content = header + rows.join('\n');
+        filename = 'ai_tools.md';
+        mimeType = 'text/markdown';
+        break;
+      }
+    }
+
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -165,11 +214,11 @@ export function Toolbar({
             Toggle Columns
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          {Object.entries(columnsVisible).map(([key, visible]) => (
+          {(Object.keys(state.visibleColumns) as Array<keyof VisibleColumns>).map((key) => (
             <DropdownMenuCheckboxItem
               key={key}
-              checked={visible}
-              onCheckedChange={(checked) => setColumnsVisible(prev => ({ ...prev, [key]: checked }))}
+              checked={state.visibleColumns[key]}
+              onCheckedChange={() => handleToggleColumn(key)}
               className="text-[10px] capitalize"
             >
               {key}
@@ -277,16 +326,40 @@ export function Toolbar({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-36">
-          <DropdownMenuItem className="text-[10px]">Name A-Z</DropdownMenuItem>
-          <DropdownMenuItem className="text-[10px]">Name Z-A</DropdownMenuItem>
+          <DropdownMenuItem className="text-[10px]" onClick={() => handleSort('name', 'asc')}>
+            Name A-Z
+            {state.sortField === 'name' && state.sortDirection === 'asc' && <Check className="w-3 h-3 ml-auto" />}
+          </DropdownMenuItem>
+          <DropdownMenuItem className="text-[10px]" onClick={() => handleSort('name', 'desc')}>
+            Name Z-A
+            {state.sortField === 'name' && state.sortDirection === 'desc' && <Check className="w-3 h-3 ml-auto" />}
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-[10px]">Type</DropdownMenuItem>
-          <DropdownMenuItem className="text-[10px]">Status</DropdownMenuItem>
+          <DropdownMenuItem className="text-[10px]" onClick={() => handleSort('type', 'asc')}>
+            Type
+            {state.sortField === 'type' && <Check className="w-3 h-3 ml-auto" />}
+          </DropdownMenuItem>
+          <DropdownMenuItem className="text-[10px]" onClick={() => handleSort('status', 'asc')}>
+            Status
+            {state.sortField === 'status' && <Check className="w-3 h-3 ml-auto" />}
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-[10px]">Date Added ↑</DropdownMenuItem>
-          <DropdownMenuItem className="text-[10px]">Date Added ↓</DropdownMenuItem>
-          <DropdownMenuItem className="text-[10px]">Rating ↑</DropdownMenuItem>
-          <DropdownMenuItem className="text-[10px]">Rating ↓</DropdownMenuItem>
+          <DropdownMenuItem className="text-[10px]" onClick={() => handleSort('date', 'asc')}>
+            Date Added (Oldest)
+            {state.sortField === 'date' && state.sortDirection === 'asc' && <Check className="w-3 h-3 ml-auto" />}
+          </DropdownMenuItem>
+          <DropdownMenuItem className="text-[10px]" onClick={() => handleSort('date', 'desc')}>
+            Date Added (Newest)
+            {state.sortField === 'date' && state.sortDirection === 'desc' && <Check className="w-3 h-3 ml-auto" />}
+          </DropdownMenuItem>
+          <DropdownMenuItem className="text-[10px]" onClick={() => handleSort('usage', 'desc')}>
+            Usage (High to Low)
+            {state.sortField === 'usage' && state.sortDirection === 'desc' && <Check className="w-3 h-3 ml-auto" />}
+          </DropdownMenuItem>
+          <DropdownMenuItem className="text-[10px]" onClick={() => handleSort('usage', 'asc')}>
+            Usage (Low to High)
+            {state.sortField === 'usage' && state.sortDirection === 'asc' && <Check className="w-3 h-3 ml-auto" />}
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -307,14 +380,27 @@ export function Toolbar({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-36">
-          <DropdownMenuItem className="text-[10px]">
-            <Check className="w-3 h-3 mr-2" />
+          <DropdownMenuItem className="text-[10px]" onClick={() => handleGroupBy('type')}>
+            {state.groupBy === 'type' && <Check className="w-3 h-3 mr-2" />}
+            {state.groupBy !== 'type' && <span className="w-3 mr-2" />}
             By Type
           </DropdownMenuItem>
-          <DropdownMenuItem className="text-[10px]">By Status</DropdownMenuItem>
-          <DropdownMenuItem className="text-[10px]">By Category</DropdownMenuItem>
+          <DropdownMenuItem className="text-[10px]" onClick={() => handleGroupBy('status')}>
+            {state.groupBy === 'status' && <Check className="w-3 h-3 mr-2" />}
+            {state.groupBy !== 'status' && <span className="w-3 mr-2" />}
+            By Status
+          </DropdownMenuItem>
+          <DropdownMenuItem className="text-[10px]" onClick={() => handleGroupBy('category')}>
+            {state.groupBy === 'category' && <Check className="w-3 h-3 mr-2" />}
+            {state.groupBy !== 'category' && <span className="w-3 mr-2" />}
+            By Category
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-[10px]">No Grouping</DropdownMenuItem>
+          <DropdownMenuItem className="text-[10px]" onClick={() => handleGroupBy('none')}>
+            {state.groupBy === 'none' && <Check className="w-3 h-3 mr-2" />}
+            {state.groupBy !== 'none' && <span className="w-3 mr-2" />}
+            No Grouping
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -335,11 +421,11 @@ export function Toolbar({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-36">
-          <DropdownMenuItem className="text-[10px]">Export CSV</DropdownMenuItem>
-          <DropdownMenuItem className="text-[10px]">Export JSON</DropdownMenuItem>
-          <DropdownMenuItem className="text-[10px]">Export Markdown</DropdownMenuItem>
+          <DropdownMenuItem className="text-[10px]" onClick={() => handleExport('csv')}>Export CSV</DropdownMenuItem>
+          <DropdownMenuItem className="text-[10px]" onClick={() => handleExport('json')}>Export JSON</DropdownMenuItem>
+          <DropdownMenuItem className="text-[10px]" onClick={() => handleExport('markdown')}>Export Markdown</DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-[10px]">Print View</DropdownMenuItem>
+          <DropdownMenuItem className="text-[10px]" onClick={() => window.print()}>Print View</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -361,16 +447,54 @@ export function Toolbar({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-40">
           <DropdownMenuLabel className="text-[9px] text-slate-500">
-            Saved Filters
+            Quick Filters
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-[10px]">Pinned Tools</DropdownMenuItem>
-          <DropdownMenuItem className="text-[10px]">LLM Chatbots</DropdownMenuItem>
-          <DropdownMenuItem className="text-[10px]">Image Generation</DropdownMenuItem>
+          <DropdownMenuItem 
+            className="text-[10px]"
+            onClick={() => {
+              dispatch({ type: 'CLEAR_ALL_FILTERS' });
+              dispatch({ type: 'SET_TAG_FILTERS', payload: { tags: [] } });
+              // Filter to show only pinned tools - we'll handle this in DataGrid
+              dispatch({ type: 'SET_ACTIVE_FILTER', payload: { filter: 'pinned' } });
+            }}
+          >
+            Pinned Tools
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            className="text-[10px]"
+            onClick={() => {
+              dispatch({ type: 'CLEAR_ALL_FILTERS' });
+              dispatch({ type: 'SET_TYPE_FILTER', payload: { filter: 'CHATBOT' } });
+            }}
+          >
+            LLM Chatbots
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            className="text-[10px]"
+            onClick={() => {
+              dispatch({ type: 'CLEAR_ALL_FILTERS' });
+              dispatch({ type: 'SET_TYPE_FILTER', payload: { filter: 'IMAGE' } });
+            }}
+          >
+            Image Generation
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            className="text-[10px]"
+            onClick={() => {
+              dispatch({ type: 'CLEAR_ALL_FILTERS' });
+              dispatch({ type: 'SET_TYPE_FILTER', payload: { filter: 'CODE' } });
+            }}
+          >
+            Code Assistants
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-[10px]">
-            <Plus className="w-3 h-3 mr-2" />
-            Save Current Filter
+          <DropdownMenuItem 
+            className="text-[10px]"
+            onClick={handleClearFilters}
+          >
+            <X className="w-3 h-3 mr-2" />
+            Clear All Filters
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
