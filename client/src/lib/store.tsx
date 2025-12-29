@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import { Tool, Category, Collection, AppState, NavItem, generateId, ToolType, ToolStatus, ContentType } from './data';
+import { Tool, Category, Collection, AppState, NavItem, generateId, ToolType, ToolStatus, ContentType, SortField, SortDirection, GroupBy, VisibleColumns } from './data';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 // Actions
@@ -35,7 +35,12 @@ type Action =
   // Collection actions
   | { type: 'ADD_COLLECTION'; payload: Collection }
   | { type: 'UPDATE_COLLECTION'; payload: Partial<Collection> & { id: string } }
-  | { type: 'DELETE_COLLECTION'; payload: { id: string } };
+  | { type: 'DELETE_COLLECTION'; payload: { id: string } }
+  // Sort, group, and columns actions
+  | { type: 'SET_SORT'; payload: { field: SortField; direction: SortDirection } }
+  | { type: 'SET_GROUP_BY'; payload: { groupBy: GroupBy } }
+  | { type: 'SET_VISIBLE_COLUMNS'; payload: { columns: Partial<VisibleColumns> } }
+  | { type: 'TOGGLE_COLUMN'; payload: { column: keyof VisibleColumns } };
 
 // Initial State
 const initialState: AppState = {
@@ -55,6 +60,23 @@ const initialState: AppState = {
   contentTypeFilter: 'all',
   selectedNavSection: null,
   lastSyncTime: null,
+  // Sort and group state
+  sortField: 'name',
+  sortDirection: 'asc',
+  groupBy: 'type',
+  visibleColumns: {
+    icon: true,
+    name: true,
+    type: true,
+    status: true,
+    desc: true,
+    tags: true,
+    source: true,
+    rating: true,
+    access: true,
+    owner: true,
+    modified: true,
+  },
 };
 
 // Reducer
@@ -330,6 +352,36 @@ function appReducer(state: AppState, action: Action): AppState {
         ...state,
         collections: state.collections.filter(c => c.id !== action.payload.id),
         lastSyncTime: new Date(),
+      };
+    }
+    // Sort, group, and columns actions
+    case 'SET_SORT': {
+      return {
+        ...state,
+        sortField: action.payload.field,
+        sortDirection: action.payload.direction,
+      };
+    }
+    case 'SET_GROUP_BY': {
+      return {
+        ...state,
+        groupBy: action.payload.groupBy,
+      };
+    }
+    case 'SET_VISIBLE_COLUMNS': {
+      return {
+        ...state,
+        visibleColumns: { ...state.visibleColumns, ...action.payload.columns },
+      };
+    }
+    case 'TOGGLE_COLUMN': {
+      const col = action.payload.column;
+      return {
+        ...state,
+        visibleColumns: {
+          ...state.visibleColumns,
+          [col]: !state.visibleColumns[col],
+        },
       };
     }
     default:

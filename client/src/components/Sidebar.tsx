@@ -372,9 +372,14 @@ export function Sidebar({ className }: { className?: string }) {
                 icon={<Bot className="w-3.5 h-3.5 text-slate-400" />}
                 count={aiToolsTree.chatbotCount || 8}
                 isExpanded={expandedCategories.chatbots}
+                isSelected={state.typeFilter === 'CHATBOT'}
                 hasChildren={true}
                 depth={1}
                 onToggle={() => toggleCategory('chatbots')}
+                onClick={() => {
+                  dispatch({ type: 'CLEAR_ALL_FILTERS' });
+                  dispatch({ type: 'SET_TYPE_FILTER', payload: { filter: 'CHATBOT' } });
+                }}
               />
               {expandedCategories.chatbots && (
                 <div>
@@ -425,9 +430,14 @@ export function Sidebar({ className }: { className?: string }) {
                 icon={<Sparkles className="w-3.5 h-3.5 text-pink-400" />}
                 count={aiToolsTree.creativeCount || 32}
                 isExpanded={expandedCategories.creative}
+                isSelected={state.typeFilter === 'IMAGE' || state.typeFilter === 'VIDEO' || state.typeFilter === 'AUDIO'}
                 hasChildren={true}
                 depth={1}
                 onToggle={() => toggleCategory('creative')}
+                onClick={() => {
+                  dispatch({ type: 'CLEAR_ALL_FILTERS' });
+                  dispatch({ type: 'SET_TYPE_FILTER', payload: { filter: 'IMAGE' } });
+                }}
               />
 
               {/* Development */}
@@ -437,9 +447,14 @@ export function Sidebar({ className }: { className?: string }) {
                 icon={<Code className="w-3.5 h-3.5 text-blue-400" />}
                 count={aiToolsTree.devCount || 26}
                 isExpanded={expandedCategories.development}
+                isSelected={state.typeFilter === 'CODE'}
                 hasChildren={true}
                 depth={1}
                 onToggle={() => toggleCategory('development')}
+                onClick={() => {
+                  dispatch({ type: 'CLEAR_ALL_FILTERS' });
+                  dispatch({ type: 'SET_TYPE_FILTER', payload: { filter: 'CODE' } });
+                }}
               />
 
               {/* Writing */}
@@ -449,9 +464,14 @@ export function Sidebar({ className }: { className?: string }) {
                 icon={<Pen className="w-3.5 h-3.5 text-green-400" />}
                 count={aiToolsTree.writingCount || 18}
                 isExpanded={expandedCategories.writing}
+                isSelected={state.typeFilter === 'WRITING'}
                 hasChildren={true}
                 depth={1}
                 onToggle={() => toggleCategory('writing')}
+                onClick={() => {
+                  dispatch({ type: 'CLEAR_ALL_FILTERS' });
+                  dispatch({ type: 'SET_TYPE_FILTER', payload: { filter: 'WRITING' } });
+                }}
               />
             </div>
           )}
