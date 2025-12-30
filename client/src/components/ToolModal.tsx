@@ -276,7 +276,7 @@ export function ToolModal({ isOpen, onClose, toolToEdit }: ToolModalProps) {
 
           {/* Summary (collapsed by default) */}
           <details className="space-y-2">
-            <summary className="text-sm text-slate-400 cursor-pointer hover:text-slate-300">Legacy Summary (optional)</summary>
+            <summary className="text-sm text-muted-foreground cursor-pointer hover:text-foreground">Legacy Summary (optional)</summary>
             <Textarea id="summary" {...register('summary')} placeholder="Brief description..." className="resize-none h-16 mt-2" data-testid="input-tool-summary" />
           </details>
 

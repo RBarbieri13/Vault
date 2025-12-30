@@ -104,50 +104,61 @@
   --chart-5: 340 75% 55%;
 }
 
-/* Light mode override */
+/* Light mode override - Professional clean design */
 .light {
-  --background: 0 0% 100%;
-  --foreground: 240 10% 3.9%;
+  /* Core backgrounds - subtle warm gray tones for professional look */
+  --background: 220 20% 97%;
+  --foreground: 222 47% 11%;
 
+  /* Cards with subtle elevation */
   --card: 0 0% 100%;
-  --card-foreground: 240 10% 3.9%;
+  --card-foreground: 222 47% 11%;
 
+  /* Popovers/dropdowns */
   --popover: 0 0% 100%;
-  --popover-foreground: 240 10% 3.9%;
+  --popover-foreground: 222 47% 11%;
 
-  --primary: 240 5.9% 10%;
-  --primary-foreground: 0 0% 98%;
+  /* Primary accent - professional blue */
+  --primary: 217 91% 50%;
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 240 4.8% 95.9%;
-  --secondary-foreground: 240 5.9% 10%;
+  /* Secondary - subtle gray */
+  --secondary: 220 14% 96%;
+  --secondary-foreground: 222 47% 11%;
 
-  --muted: 240 4.8% 95.9%;
-  --muted-foreground: 240 3.8% 46.1%;
+  /* Muted elements */
+  --muted: 220 14% 96%;
+  --muted-foreground: 215 16% 47%;
 
-  --accent: 240 4.8% 95.9%;
-  --accent-foreground: 240 5.9% 10%;
+  /* Accent color - matches primary for consistency */
+  --accent: 217 91% 50%;
+  --accent-foreground: 0 0% 100%;
 
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 0 0% 98%;
+  /* Destructive/error states */
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
 
-  --border: 240 5.9% 90%;
-  --input: 240 5.9% 90%;
-  --ring: 240 5.9% 10%;
+  /* Borders and inputs */
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  --ring: 217 91% 50%;
 
-  --sidebar: 0 0% 98%;
-  --sidebar-foreground: 240 5.3% 26.1%;
-  --sidebar-primary: 240 5.9% 10%;
-  --sidebar-primary-foreground: 0 0% 98%;
-  --sidebar-accent: 240 4.8% 95.9%;
-  --sidebar-accent-foreground: 240 5.9% 10%;
-  --sidebar-border: 220 13% 91%;
-  --sidebar-ring: 217.2 91.2% 59.8%;
+  /* Sidebar - slightly darker for contrast */
+  --sidebar: 220 20% 98%;
+  --sidebar-foreground: 222 47% 20%;
+  --sidebar-primary: 217 91% 50%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 217 91% 95%;
+  --sidebar-accent-foreground: 217 91% 40%;
+  --sidebar-border: 220 13% 88%;
+  --sidebar-ring: 217 91% 50%;
 
-  --chart-1: 12 76% 61%;
-  --chart-2: 173 58% 39%;
-  --chart-3: 197 37% 24%;
-  --chart-4: 43 74% 66%;
-  --chart-5: 27 87% 67%;
+  /* Charts with good contrast */
+  --chart-1: 217 91% 50%;
+  --chart-2: 160 84% 39%;
+  --chart-3: 43 96% 56%;
+  --chart-4: 280 67% 58%;
+  --chart-5: 0 84% 60%;
 }
 
 @layer base {
@@ -170,7 +181,7 @@
     display: none;
   }
 
-  /* Custom scrollbar styling for dark theme */
+  /* Custom scrollbar styling - theme aware */
   .thin-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.15) rgba(0, 0, 0, 0.2);
@@ -190,6 +201,20 @@
   }
   .thin-scrollbar::-webkit-scrollbar-thumb:hover {
     background-color: rgba(255, 255, 255, 0.25);
+  }
+
+  /* Light mode scrollbar styling */
+  .light .thin-scrollbar {
+    scrollbar-color: rgba(0, 0, 0, 0.15) rgba(0, 0, 0, 0.05);
+  }
+  .light .thin-scrollbar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+  }
+  .light .thin-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.15);
+  }
+  .light .thin-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 0, 0, 0.25);
   }
 
   /* Data-dense typography */
@@ -246,17 +271,17 @@
     min-height: 28px;
   }
 
-  /* AI Vault specific colors */
+  /* AI Vault specific colors - use CSS variables for theme support */
   .ai-vault-bg {
-    background-color: #1e2433;
+    background-color: hsl(var(--background));
   }
 
   .ai-vault-sidebar {
-    background-color: #1a1f2e;
+    background-color: hsl(var(--sidebar));
   }
 
   .ai-vault-header {
-    background-color: #252b3b;
+    background-color: hsl(var(--card));
   }
 
   /* Type badge sizes */
@@ -468,4 +493,104 @@
     font-style: italic;
     font-size: 11px;
   }
+}
+
+/* =====================================================
+   LIGHT MODE - Comprehensive Theme Overrides
+   ===================================================== */
+
+/* Light mode AI Vault specific colors */
+.light .ai-vault-bg {
+  background-color: #f8fafc;
+}
+
+.light .ai-vault-sidebar {
+  background-color: #f1f5f9;
+}
+
+.light .ai-vault-header {
+  background-color: #ffffff;
+}
+
+/* Light mode skeleton loading */
+.light .skeleton {
+  background: linear-gradient(90deg,
+    rgba(0, 0, 0, 0.03) 0%,
+    rgba(0, 0, 0, 0.06) 50%,
+    rgba(0, 0, 0, 0.03) 100%);
+}
+
+/* Light mode panel collapse button */
+.light .panel-collapse-btn {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #64748b;
+}
+
+.light .panel-collapse-btn:hover {
+  background: #f8fafc;
+  color: #334155;
+}
+
+/* Light mode keyboard hints */
+.light .kbd {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #475569;
+}
+
+/* Light mode shortcut hints */
+.light .shortcut-hint {
+  color: #64748b;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Light mode focus ring */
+.light .focus-ring-enhanced {
+  --tw-ring-offset-color: #ffffff;
+}
+
+/* Light mode toolbar button active state */
+.light .toolbar-btn-active {
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.1);
+}
+
+/* Light mode selection indicator */
+.light .selection-indicator {
+  background-color: rgba(37, 99, 235, 0.1);
+  border-left-color: #3b82f6;
+}
+
+.light .selection-indicator-enhanced {
+  background: linear-gradient(to right, rgba(37, 99, 235, 0.15), transparent);
+  border-left-color: #3b82f6;
+}
+
+/* Light mode cyan highlight for compatibility */
+.light .cyan-highlight {
+  background-color: rgba(37, 99, 235, 0.1);
+  border-left-color: #3b82f6;
+}
+
+/* Light mode tree connector */
+.light .tree-connector {
+  color: rgba(100, 116, 139, 0.5);
+}
+
+/* Light mode dropdown shadows */
+.light [data-radix-popper-content-wrapper] {
+  --tw-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+/* Light mode tool icon enhancement */
+.light .tool-icon-enhanced {
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* Light mode avatar */
+.light .avatar-consistent {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }

@@ -198,7 +198,7 @@ export function UsageBar({
   return (
     <div className={cn("flex items-center gap-1", className)}>
       <div
-        className="relative bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden"
+        className="relative bg-secondary rounded-full overflow-hidden"
         style={{ width, height }}
       >
         <div
@@ -210,7 +210,7 @@ export function UsageBar({
         />
       </div>
       {showLabel && (
-        <span className="text-[9px] text-slate-500 tabular-nums min-w-[24px]">
+        <span className="text-[9px] text-muted-foreground tabular-nums min-w-[24px]">
           {clampedValue}%
         </span>
       )}

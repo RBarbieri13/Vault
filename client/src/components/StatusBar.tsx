@@ -63,8 +63,8 @@ export function StatusBar({ selectedCount = 0, className }: StatusBarProps) {
   return (
     <div className={cn(
       "flex items-center justify-between gap-4 px-4 h-[22px] min-h-[22px]",
-      "bg-[#1a1f2e] border-t border-slate-700/50",
-      "text-[10px] text-slate-400",
+      "bg-card border-t border-border",
+      "text-[10px] text-muted-foreground",
       className
     )}>
       {/* Left side - counts and filters */}
@@ -75,8 +75,8 @@ export function StatusBar({ selectedCount = 0, className }: StatusBarProps) {
 
         {selectedCount > 0 && (
           <>
-            <span className="text-slate-600">|</span>
-            <span className="text-cyan-400 font-medium">
+            <span className="text-border">|</span>
+            <span className="text-primary font-medium">
               {selectedCount} selected
             </span>
           </>
@@ -84,8 +84,8 @@ export function StatusBar({ selectedCount = 0, className }: StatusBarProps) {
 
         {filterDescription && (
           <>
-            <span className="text-slate-600">|</span>
-            <span className="text-slate-500">
+            <span className="text-border">|</span>
+            <span className="text-muted-foreground/70">
               {filterDescription}
             </span>
           </>
@@ -107,12 +107,12 @@ export function StatusBar({ selectedCount = 0, className }: StatusBarProps) {
           )}
         </span>
 
-        <span className="text-slate-600">|</span>
+        <span className="text-border">|</span>
 
-        <span className="font-mono text-slate-500">v2.4.1</span>
+        <span className="font-mono text-muted-foreground/70">v2.4.1</span>
 
         <button
-          className="p-0.5 hover:bg-slate-700 rounded"
+          className="p-0.5 hover:bg-muted rounded"
           title="Settings"
         >
           <Settings className="w-3 h-3" />

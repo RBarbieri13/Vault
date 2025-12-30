@@ -286,15 +286,15 @@ function DraggableRow({
       style={{ ...style, gridTemplateColumns }}
       className={cn(
         "grid items-center gap-0 px-2 h-[24px] min-h-[24px] group",
-        "border-b border-slate-700/20",
+        "border-b border-border/30",
         "cursor-pointer transition-all duration-100",
-        isDragging && "opacity-50 bg-blue-500/20 z-50 shadow-lg",
+        isDragging && "opacity-50 bg-primary/20 z-50 shadow-lg",
         isSelected
-          ? "bg-gradient-to-r from-blue-500/15 via-blue-500/8 to-transparent border-l-[3px] border-l-blue-500"
+          ? "bg-gradient-to-r from-primary/15 via-primary/8 to-transparent border-l-[3px] border-l-primary"
           : isRowChecked
-            ? "bg-blue-500/8 border-l-[3px] border-l-blue-400/60"
-            : "hover:bg-white/[0.04] border-l-[3px] border-l-transparent",
-        localIndex % 2 === 1 && !isSelected && !isRowChecked && "bg-white/[0.015]"
+            ? "bg-primary/8 border-l-[3px] border-l-primary/60"
+            : "hover:bg-foreground/[0.04] border-l-[3px] border-l-transparent",
+        localIndex % 2 === 1 && !isSelected && !isRowChecked && "bg-foreground/[0.02]"
       )}
       onClick={onSelect}
       onMouseEnter={() => onHover(tool.id)}
@@ -306,14 +306,14 @@ function DraggableRow({
         <span
           {...listeners}
           className={cn(
-            "cursor-grab active:cursor-grabbing text-slate-500 hover:text-slate-300 transition-colors",
+            "cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors",
             "opacity-0 group-hover:opacity-100"
           )}
           onClick={(e) => e.stopPropagation()}
         >
           <GripVertical className="w-3 h-3" />
         </span>
-        <span className="text-[9px] text-slate-400 font-mono">{rowNum}</span>
+        <span className="text-[9px] text-muted-foreground font-mono">{rowNum}</span>
       </div>
 
       {/* Checkbox */}
@@ -323,9 +323,9 @@ function DraggableRow({
           onCheckedChange={onToggleRowSelection}
           onClick={(e) => e.stopPropagation()}
           className={cn(
-            "h-3.5 w-3.5 border-slate-500 transition-all",
-            "hover:border-slate-400 hover:bg-white/5",
-            "data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+            "h-3.5 w-3.5 border-muted-foreground/50 transition-all",
+            "hover:border-muted-foreground hover:bg-foreground/5",
+            "data-[state=checked]:bg-primary data-[state=checked]:border-primary"
           )}
         />
       </div>
@@ -350,7 +350,7 @@ function DraggableRow({
 
       {/* Name */}
       <div className="flex items-center gap-1 min-w-0 px-1">
-        <span className="text-[10px] font-medium text-slate-200 truncate">
+        <span className="text-[10px] font-medium text-foreground truncate">
           {tool.name}
         </span>
         {isHovered && (
@@ -358,7 +358,7 @@ function DraggableRow({
             href={tool.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-shrink-0 text-slate-400 hover:text-cyan-400"
+            className="flex-shrink-0 text-muted-foreground hover:text-primary"
             onClick={(e) => e.stopPropagation()}
           >
             <ExternalLink className="w-2.5 h-2.5" />
@@ -385,14 +385,14 @@ function DraggableRow({
         <span className="text-[9px]" style={{ color: statusDisplay.color }}>
           {statusDisplay.icon}
         </span>
-        <span className="text-[9px] text-slate-500 truncate">
+        <span className="text-[9px] text-muted-foreground truncate">
           {statusDisplay.label}
         </span>
       </div>
 
       {/* Description */}
       <div className="flex items-center min-w-0 px-1">
-        <span className="text-[9px] text-slate-400 truncate">
+        <span className="text-[9px] text-muted-foreground truncate">
           {tool.summary}
         </span>
       </div>
@@ -435,7 +435,7 @@ function DraggableRow({
         })}
         {((tool.tags?.length || 0) + (tool.customLabels?.length || 0)) > 2 && (
           <span
-            className="text-[7px] text-slate-400 bg-white/5 px-1.5 py-0.5 rounded cursor-pointer hover:bg-white/10 hover:text-slate-300 transition-colors"
+            className="text-[7px] text-muted-foreground bg-foreground/5 px-1.5 py-0.5 rounded cursor-pointer hover:bg-foreground/10 hover:text-foreground transition-colors"
             title={[...(tool.customLabels || []), ...(tool.tags || [])].slice(2).join(', ')}
           >
             +{(tool.tags?.length || 0) + (tool.customLabels?.length || 0) - 2}
@@ -446,7 +446,7 @@ function DraggableRow({
       {/* Source */}
       <div className="flex items-center gap-1 px-1">
         <span className="text-[8px]">🔗</span>
-        <span className="text-[9px] text-slate-500 truncate">{getSourceDomain(tool.url)}</span>
+        <span className="text-[9px] text-muted-foreground truncate">{getSourceDomain(tool.url)}</span>
       </div>
 
       {/* Rating (stars) */}
@@ -475,7 +475,7 @@ function DraggableRow({
 
       {/* Modified */}
       <div className="flex justify-center items-center">
-        <span className="text-[9px] text-slate-400">{formatModified(tool.createdAt)}</span>
+        <span className="text-[9px] text-muted-foreground">{formatModified(tool.createdAt)}</span>
       </div>
 
       {/* Actions */}
@@ -486,7 +486,7 @@ function DraggableRow({
               variant="ghost"
               size="icon"
               className={cn(
-                "h-4 w-4 text-slate-400 hover:text-slate-600",
+                "h-4 w-4 text-muted-foreground hover:text-foreground",
                 "opacity-0 group-hover:opacity-100 transition-opacity"
               )}
               onClick={(e) => e.stopPropagation()}
@@ -941,13 +941,13 @@ export function DataGrid({
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-    <div className={cn("flex flex-col h-full bg-[#1e2433]", className)}>
+    <div className={cn("flex flex-col h-full bg-background", className)}>
       {/* Header */}
       <div
         className={cn(
           "grid items-center gap-0 px-2 h-[28px] min-h-[28px]",
-          "bg-[#252b3b] border-b border-slate-700/50",
-          "text-[9px] font-semibold uppercase tracking-[0.04em] text-slate-400"
+          "bg-card border-b border-border",
+          "text-[9px] font-semibold uppercase tracking-[0.04em] text-muted-foreground"
         )}
         style={{ gridTemplateColumns }}
       >
@@ -958,7 +958,7 @@ export function DataGrid({
               "flex items-center gap-0.5 truncate px-1",
               col.align === 'center' && "justify-center",
               col.align === 'right' && "justify-end",
-              col.sortable && "cursor-pointer hover:text-slate-200 transition-colors"
+              col.sortable && "cursor-pointer hover:text-foreground transition-colors"
             )}
             onClick={() => col.sortable && handleSort(col.id)}
           >
@@ -966,7 +966,7 @@ export function DataGrid({
               <Checkbox
                 checked={isAllSelected}
                 onCheckedChange={() => isAllSelected ? deselectAll() : selectAll()}
-                className="h-3.5 w-3.5 border-slate-500 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                className="h-3.5 w-3.5 border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               />
             ) : (
               <>
@@ -974,10 +974,10 @@ export function DataGrid({
                 {col.sortable && (
                   <span className="w-3 h-3 flex items-center justify-center ml-0.5">
                     {sortField === col.id && sortDirection === 'asc' && (
-                      <ArrowUp className="w-2.5 h-2.5 text-blue-400" />
+                      <ArrowUp className="w-2.5 h-2.5 text-primary" />
                     )}
                     {sortField === col.id && sortDirection === 'desc' && (
-                      <ArrowDown className="w-2.5 h-2.5 text-blue-400" />
+                      <ArrowDown className="w-2.5 h-2.5 text-primary" />
                     )}
                     {sortField !== col.id && (
                       <ArrowUpDown className="w-2.5 h-2.5 opacity-30" />
@@ -1003,23 +1003,23 @@ export function DataGrid({
           const isDropTarget = overId === `category-${type}`;
 
           return (
-            <div key={type} className="border-b border-slate-700/30">
+            <div key={type} className="border-b border-border/50">
               {/* Group Header - Droppable */}
               <DroppableCategory type={type} isOver={isDropTarget}>
                 <div
                   className={cn(
                     "flex items-center gap-2 px-3 h-[28px]",
-                    "bg-gradient-to-r from-slate-800/80 to-slate-800/40",
-                    "cursor-pointer hover:from-slate-700/80 hover:to-slate-700/40",
-                    "border-b border-slate-700/50 border-l-2",
-                    isDropTarget ? "border-l-blue-500 from-blue-500/20" : "border-l-slate-600",
+                    "bg-gradient-to-r from-muted/80 to-muted/40",
+                    "cursor-pointer hover:from-muted hover:to-muted/60",
+                    "border-b border-border/50 border-l-2",
+                    isDropTarget ? "border-l-primary from-primary/20" : "border-l-muted-foreground/30",
                     "transition-all duration-150 group"
                   )}
                   onClick={() => toggleGroup(type)}
                 >
                   <span className={cn(
-                    "text-slate-400 transition-transform duration-150",
-                    isExpanded && "text-slate-300"
+                    "text-muted-foreground transition-transform duration-150",
+                    isExpanded && "text-foreground"
                   )}>
                     {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
                   </span>
@@ -1030,7 +1030,7 @@ export function DataGrid({
                     }}
                     onCheckedChange={() => toggleGroupSelection(type)}
                     onClick={(e) => e.stopPropagation()}
-                    className="h-3.5 w-3.5 border-slate-500 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                    className="h-3.5 w-3.5 border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                   />
                   <span
                     className="w-5 h-5 flex items-center justify-center rounded text-[11px] shadow-sm"
@@ -1038,20 +1038,20 @@ export function DataGrid({
                   >
                     {meta.icon}
                   </span>
-                  <span className="text-[11px] font-semibold text-slate-200">
+                  <span className="text-[11px] font-semibold text-foreground">
                     {type}
                   </span>
-                  <span className="text-[10px] text-slate-500 bg-white/5 px-1.5 py-0.5 rounded-full">
+                  <span className="text-[10px] text-muted-foreground bg-foreground/5 px-1.5 py-0.5 rounded-full">
                     {categoryTools.length}
                   </span>
                   {isDropTarget && (
-                    <span className="text-[9px] text-blue-400 bg-blue-500/20 px-2 py-0.5 rounded animate-pulse">
+                    <span className="text-[9px] text-primary bg-primary/20 px-2 py-0.5 rounded animate-pulse">
                       Drop here
                     </span>
                   )}
                   <div className="flex-1" />
                   <button
-                    className="text-slate-500 hover:text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
                     onClick={(e) => { e.stopPropagation(); }}
                   >
                     <Settings className="w-3.5 h-3.5" />
@@ -1099,13 +1099,13 @@ export function DataGrid({
         {sortedTools.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full min-h-[200px] py-12">
             <div className="text-5xl mb-4 opacity-50">🔍</div>
-            <p className="text-sm font-medium text-slate-300">No tools found</p>
+            <p className="text-sm font-medium text-foreground">No tools found</p>
             {state.searchQuery ? (
-              <p className="text-xs text-slate-500 mt-2 text-center max-w-[280px]">
+              <p className="text-xs text-muted-foreground mt-2 text-center max-w-[280px]">
                 Try adjusting your search or filter terms to find what you're looking for
               </p>
             ) : (
-              <p className="text-xs text-slate-500 mt-2 text-center max-w-[280px]">
+              <p className="text-xs text-muted-foreground mt-2 text-center max-w-[280px]">
                 Add your first AI tool to get started
               </p>
             )}
@@ -1117,7 +1117,7 @@ export function DataGrid({
       <DragOverlay>
         {activeTool && (
           <div
-            className="flex items-center gap-2 px-3 py-2 bg-slate-800/95 rounded-lg border border-blue-500/50 shadow-xl"
+            className="flex items-center gap-2 px-3 py-2 bg-card/95 rounded-lg border border-primary/50 shadow-xl"
             style={{ width: '280px' }}
           >
             <span
@@ -1126,7 +1126,7 @@ export function DataGrid({
             >
               {activeTool.icon || activeTool.name.substring(0, 2)}
             </span>
-            <span className="text-[11px] font-medium text-white truncate">
+            <span className="text-[11px] font-medium text-foreground truncate">
               {activeTool.name}
             </span>
             <span
@@ -1146,18 +1146,18 @@ export function DataGrid({
 
     {/* Custom Label Dialog */}
     <Dialog open={labelDialogOpen} onOpenChange={setLabelDialogOpen}>
-      <DialogContent className="sm:max-w-[400px] bg-slate-900 border-slate-700">
+      <DialogContent className="sm:max-w-[400px] bg-card border-border">
         <DialogHeader>
-          <DialogTitle className="text-slate-100 flex items-center gap-2">
-            <Tag className="w-4 h-4 text-purple-400" />
+          <DialogTitle className="text-foreground flex items-center gap-2">
+            <Tag className="w-4 h-4 text-purple-500" />
             Manage Labels
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           {labelDialogTool && (
             <>
-              <p className="text-[11px] text-slate-400">
-                Add custom labels to <span className="text-white font-medium">{labelDialogTool.name}</span>
+              <p className="text-[11px] text-muted-foreground">
+                Add custom labels to <span className="text-foreground font-medium">{labelDialogTool.name}</span>
               </p>
 
               {/* Current Labels */}
@@ -1191,7 +1191,7 @@ export function DataGrid({
                   value={newLabel}
                   onChange={(e) => setNewLabel(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleAddLabel()}
-                  className="flex-1 h-8 text-[11px] bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                  className="flex-1 h-8 text-[11px] bg-secondary border-border text-foreground placeholder:text-muted-foreground"
                 />
                 <Button
                   size="sm"
@@ -1211,7 +1211,7 @@ export function DataGrid({
             variant="outline"
             size="sm"
             onClick={() => setLabelDialogOpen(false)}
-            className="text-[10px] border-slate-600 text-slate-300 hover:bg-slate-800"
+            className="text-[10px]"
           >
             Done
           </Button>

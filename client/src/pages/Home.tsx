@@ -77,26 +77,26 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-[#1a1f2e]">
+      <div className="flex h-screen w-full items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-6 w-6 animate-spin text-cyan-500" />
-          <p className="text-sm text-slate-400">Loading AI Vault...</p>
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Loading AI Vault...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-[#161b26]">
+    <div className="flex h-screen w-full overflow-hidden bg-background">
       {/* Mobile Sidebar */}
       <div className="md:hidden absolute top-2 left-2 z-50">
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" size="icon" className="h-8 w-8 bg-[#1a1f2e] border-slate-700">
-              <Menu className="h-4 w-4 text-slate-300" />
+            <Button variant="outline" size="icon" className="h-8 w-8 bg-sidebar border-border">
+              <Menu className="h-4 w-4 text-muted-foreground" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-[240px] bg-[#1a1f2e] border-slate-700">
+          <SheetContent side="left" className="p-0 w-[240px] bg-sidebar border-border">
             <Sidebar className="h-full border-none w-full" />
           </SheetContent>
         </Sheet>
@@ -108,7 +108,7 @@ export default function Home() {
       </div>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden bg-[#1e2433]">
+      <main className="flex-1 flex flex-col h-full overflow-hidden bg-background">
         {/* Breadcrumb Navigation */}
         <Breadcrumb items={defaultBreadcrumb} />
 
@@ -140,12 +140,12 @@ export default function Home() {
               {/* Resize Handle */}
               <ResizableHandle
                 withHandle
-                className="w-[3px] bg-slate-700/50 hover:bg-cyan-500 transition-colors"
+                className="w-[3px] bg-border hover:bg-primary transition-colors"
               />
 
               {/* Details Panel */}
               <ResizablePanel defaultSize={30} minSize={20} maxSize={40}>
-                <div className="h-full overflow-auto bg-[#1e2433] border-l border-slate-700/50">
+                <div className="h-full overflow-auto bg-background border-l border-border">
                   <ToolDetails
                     tool={selectedTool}
                     onClose={() => setShowDetails(false)}
