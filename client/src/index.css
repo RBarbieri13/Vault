@@ -56,8 +56,15 @@
   --color-sidebar-ring: hsl(var(--sidebar-ring));
 }
 
-/* AI Vault Dark Theme - Default */
+/* Base radius variable */
 :root {
+  --radius: 0.4rem;
+}
+
+/* AI Vault Dark Theme - Default and explicit .dark */
+:root,
+:root.dark,
+.dark {
   --background: 220 20% 10%;
   --foreground: 210 40% 98%;
 
@@ -86,8 +93,6 @@
   --input: 220 15% 20%;
   --ring: 190 80% 50%;
 
-  --radius: 0.4rem;
-
   --sidebar: 220 25% 12%;
   --sidebar-foreground: 210 40% 90%;
   --sidebar-primary: 190 80% 50%;
@@ -105,6 +110,9 @@
 }
 
 /* Light mode override - Professional clean design */
+/* Use html.light for highest specificity to ensure override */
+html.light,
+:root.light,
 .light {
   /* Core backgrounds - subtle warm gray tones for professional look */
   --background: 220 20% 97%;
