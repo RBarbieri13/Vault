@@ -66,6 +66,18 @@ export async function registerRoutes(
 ): Promise<Server> {
 
   // ============================================
+  // HEALTH CHECK (for deployment services)
+  // ============================================
+
+  app.get("/api/health", (_req, res) => {
+    res.json({
+      status: "healthy",
+      timestamp: new Date().toISOString(),
+      version: process.env.npm_package_version || "1.0.0"
+    });
+  });
+
+  // ============================================
   // CATEGORY ROUTES
   // ============================================
 

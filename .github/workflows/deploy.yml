@@ -1,0 +1,114 @@
+# Automatic deployment workflow
+# Deploys to Render on every push to main branch
+# Creates preview deployments for pull requests
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run check
+
+      - name: Build application
+        run: npm run build
+
+  deploy-production:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Deploy to Render
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -n "$RENDER_DEPLOY_HOOK_URL" ]; then
+            curl -X POST "$RENDER_DEPLOY_HOOK_URL"
+            echo "Deployment triggered on Render"
+          else
+            echo "RENDER_DEPLOY_HOOK_URL not set - skipping deployment trigger"
+          fi
+
+  deploy-preview:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Deploy Preview to Render
+        id: deploy-preview
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+        run: |
+          if [ -n "$RENDER_API_KEY" ] && [ -n "$RENDER_SERVICE_ID" ]; then
+            # Trigger a preview deployment via Render API
+            response=$(curl -s -X POST \
+              -H "Authorization: Bearer $RENDER_API_KEY" \
+              -H "Content-Type: application/json" \
+              "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys" \
+              -d "{\"clearCache\": \"do_not_clear\"}")
+
+            deploy_id=$(echo $response | jq -r '.id // empty')
+
+            if [ -n "$deploy_id" ]; then
+              echo "Preview deployment started: $deploy_id"
+              echo "deploy_id=$deploy_id" >> $GITHUB_OUTPUT
+            else
+              echo "Failed to start preview deployment"
+              echo "$response"
+            fi
+          else
+            echo "Render API credentials not configured - skipping preview deployment"
+          fi
+
+      - name: Comment PR with preview link
+        if: steps.deploy-preview.outputs.deploy_id != ''
+        uses: actions/github-script@v7
+        env:
+          RENDER_SERVICE_URL: ${{ secrets.RENDER_SERVICE_URL }}
+        with:
+          script: |
+            const serviceUrl = process.env.RENDER_SERVICE_URL || 'https://your-app.onrender.com';
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Preview Deployment\n\nYour preview is being deployed to Render.\n\n**Preview URL**: ${serviceUrl}\n\n_Note: It may take a few minutes for the deployment to complete._`
+            });
