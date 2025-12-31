@@ -350,7 +350,7 @@ export function ToolTable() {
   });
 
   return (
-    <div className="h-full flex flex-col bg-white dark:bg-slate-950">
+    <div className="h-full flex flex-col bg-background">
       {/* Sticky Header Row */}
       <div className="flex-none border-b shadow-sm z-20 relative">
         <Table>

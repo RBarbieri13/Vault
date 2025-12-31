@@ -68,8 +68,8 @@ function SidebarItem({
         "flex items-center gap-1.5 py-1.5 pr-2 cursor-pointer transition-all duration-150 group",
         "text-[11px] leading-tight",
         isSelected
-          ? "bg-gradient-to-r from-blue-500/20 to-transparent border-l-[3px] border-l-blue-400 text-white font-semibold"
-          : "text-slate-200 hover:bg-white/8 hover:text-white border-l-[3px] border-l-transparent"
+          ? "bg-gradient-to-r from-primary/20 to-transparent border-l-[3px] border-l-primary text-foreground font-semibold"
+          : "text-sidebar-foreground hover:bg-foreground/8 hover:text-foreground border-l-[3px] border-l-transparent"
       )}
       style={{ paddingLeft: paddingLeft - 3 }}
       onClick={hasChildren ? onToggle : onClick}
@@ -78,7 +78,7 @@ function SidebarItem({
       {hasChildren ? (
         <span className={cn(
           "w-3 h-3 flex items-center justify-center transition-transform duration-150",
-          isExpanded ? "text-slate-300" : "text-slate-400"
+          isExpanded ? "text-foreground" : "text-muted-foreground"
         )}>
           {isExpanded ? (
             <ChevronDown className="w-2.5 h-2.5" />
@@ -92,7 +92,7 @@ function SidebarItem({
 
       {/* Icon */}
       {icon && (
-        <span className="w-4 h-4 flex items-center justify-center flex-shrink-0 text-slate-300">
+        <span className="w-4 h-4 flex items-center justify-center flex-shrink-0 text-muted-foreground">
           {icon}
         </span>
       )}
@@ -104,8 +104,8 @@ function SidebarItem({
       {count !== undefined && count > 0 && (
         <span className={cn(
           "text-[10px] min-w-[20px] text-center px-1.5 py-0.5 rounded-full",
-          "bg-white/10",
-          isSelected ? "text-blue-300" : "text-slate-300"
+          "bg-foreground/10",
+          isSelected ? "text-primary" : "text-muted-foreground"
         )}>
           {count}
         </span>
@@ -131,14 +131,14 @@ function SectionHeader({ label, icon, count, isExpanded, onToggle }: SectionHead
       className={cn(
         "flex items-center gap-1.5 px-3 py-2 cursor-pointer mt-2",
         "text-[10px] font-bold uppercase tracking-[0.08em]",
-        "text-slate-300 hover:text-white transition-colors",
-        "border-l-2 border-l-blue-500/40"
+        "text-muted-foreground hover:text-foreground transition-colors",
+        "border-l-2 border-l-primary/40"
       )}
       onClick={onToggle}
     >
       <span className={cn(
         "w-3 h-3 flex items-center justify-center transition-transform duration-150",
-        isExpanded ? "text-slate-200" : "text-slate-400"
+        isExpanded ? "text-foreground" : "text-muted-foreground"
       )}>
         {isExpanded ? (
           <ChevronDown className="w-2.5 h-2.5" />
@@ -146,10 +146,10 @@ function SectionHeader({ label, icon, count, isExpanded, onToggle }: SectionHead
           <ChevronRight className="w-2.5 h-2.5" />
         )}
       </span>
-      {icon && <span className="w-3 h-3 flex items-center justify-center text-slate-300">{icon}</span>}
+      {icon && <span className="w-3 h-3 flex items-center justify-center text-muted-foreground">{icon}</span>}
       <span className="flex-1">{label}</span>
       {count !== undefined && count > 0 && (
-        <span className="text-[9px] text-slate-300 bg-white/10 px-1.5 py-0.5 rounded-full">
+        <span className="text-[9px] text-muted-foreground bg-foreground/10 px-1.5 py-0.5 rounded-full">
           {count}
         </span>
       )}
@@ -284,17 +284,17 @@ export function Sidebar({ className }: { className?: string }) {
   return (
     <div className={cn(
       "flex flex-col h-full w-[240px] min-w-[240px]",
-      "bg-[#141824] text-white",
+      "bg-sidebar text-sidebar-foreground",
       className
     )}>
       {/* Header */}
-      <div className="p-3 border-b border-slate-700/30">
+      <div className="p-3 border-b border-sidebar-border">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <div className="bg-blue-500 text-white p-1.5 rounded">
+            <div className="bg-primary text-primary-foreground p-1.5 rounded">
               <Box className="w-4 h-4" />
             </div>
-            <h2 className="font-semibold text-sm tracking-tight text-white">AI Vault</h2>
+            <h2 className="font-semibold text-sm tracking-tight text-foreground">AI Vault</h2>
           </div>
           <div className="flex items-center gap-0.5">
             <ModeToggle />
@@ -303,7 +303,7 @@ export function Sidebar({ className }: { className?: string }) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 text-slate-400 hover:text-white hover:bg-white/10"
+                  className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-foreground/10"
                 >
                   <MoreHorizontal className="w-3.5 h-3.5" />
                 </Button>
@@ -331,14 +331,14 @@ export function Sidebar({ className }: { className?: string }) {
 
         {/* Search */}
         <div className="relative group">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-white transition-colors" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground group-focus-within:text-foreground transition-colors" />
           <Input
             id="sidebar-search"
             placeholder="Search All..."
             className={cn(
-              "pl-8 h-8 text-[11px] bg-[#1e2433] border-slate-600/50",
-              "text-white placeholder:text-slate-400",
-              "focus-visible:ring-1 focus-visible:ring-blue-500/50 focus-visible:bg-[#252b3b]"
+              "pl-8 h-8 text-[11px] bg-secondary border-border",
+              "text-foreground placeholder:text-muted-foreground",
+              "focus-visible:ring-1 focus-visible:ring-primary/50 focus-visible:bg-card"
             )}
             value={state.searchQuery}
             onChange={(e) => dispatch({ type: 'SET_SEARCH_QUERY', payload: { query: e.target.value } })}
@@ -385,7 +385,7 @@ export function Sidebar({ className }: { className?: string }) {
               <SidebarItem
                 id="chatbots"
                 label="Chatbots"
-                icon={<Bot className="w-3.5 h-3.5 text-slate-400" />}
+                icon={<Bot className="w-3.5 h-3.5" />}
                 count={aiToolsTree.chatbotCount || 8}
                 isExpanded={expandedCategories.chatbots}
                 isSelected={state.typeFilter === 'CHATBOT'}
@@ -403,7 +403,7 @@ export function Sidebar({ className }: { className?: string }) {
                   <SidebarItem
                     id="llmplatforms"
                     label="LLM Platforms"
-                    icon={<Folder className="w-3 h-3 text-slate-500" />}
+                    icon={<Folder className="w-3 h-3" />}
                     isExpanded={expandedCategories.llmplatforms}
                     hasChildren={true}
                     depth={2}
@@ -411,11 +411,11 @@ export function Sidebar({ className }: { className?: string }) {
                   />
                   {expandedCategories.llmplatforms && (
                     <div>
-                      <SidebarItem id="consumer" label="Consumer" depth={3} icon={<span className="w-1.5 h-1.5 rounded-full bg-slate-500" />} />
-                      <SidebarItem id="anthropic-sub" label="Anthropic" depth={3} icon={<span className="w-1.5 h-1.5 rounded-full bg-slate-500" />} />
-                      <SidebarItem id="openai-sub" label="OpenAI" depth={3} icon={<span className="w-1.5 h-1.5 rounded-full bg-slate-500" />} />
-                      <SidebarItem id="gpt4turbo" label="GPT-4 Turbo" depth={3} icon={<span className="w-1.5 h-1.5 rounded-full bg-slate-500" />} />
-                      <SidebarItem id="gpt4o" label="GPT-4o" depth={3} icon={<span className="w-1.5 h-1.5 rounded-full bg-slate-500" />} />
+                      <SidebarItem id="consumer" label="Consumer" depth={3} icon={<span className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />} />
+                      <SidebarItem id="anthropic-sub" label="Anthropic" depth={3} icon={<span className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />} />
+                      <SidebarItem id="openai-sub" label="OpenAI" depth={3} icon={<span className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />} />
+                      <SidebarItem id="gpt4turbo" label="GPT-4 Turbo" depth={3} icon={<span className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />} />
+                      <SidebarItem id="gpt4o" label="GPT-4o" depth={3} icon={<span className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />} />
                     </div>
                   )}
                 </div>
@@ -514,7 +514,7 @@ export function Sidebar({ className }: { className?: string }) {
                   key={tag}
                   id={`tag-${tag}`}
                   label={tag}
-                  icon={<Hash className="w-3 h-3 text-slate-500" />}
+                  icon={<Hash className="w-3 h-3" />}
                   count={count}
                   depth={1}
                   onClick={() => dispatch({ type: 'ADD_TAG_FILTER', payload: { tag } })}
@@ -528,7 +528,7 @@ export function Sidebar({ className }: { className?: string }) {
             <SidebarItem
               id="settings"
               label="SETTINGS"
-              icon={<Settings className="w-3.5 h-3.5 text-slate-400" />}
+              icon={<Settings className="w-3.5 h-3.5" />}
               depth={0}
             />
           </div>

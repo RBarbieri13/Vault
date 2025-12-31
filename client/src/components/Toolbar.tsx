@@ -146,7 +146,7 @@ export function Toolbar({
   return (
     <div className={cn(
       "flex items-center gap-1.5 px-3 h-[32px] min-h-[32px]",
-      "bg-[#1e2433] border-b border-slate-700/50",
+      "bg-card border-b border-border",
       className
     )}>
       {/* View Mode Dropdown */}
@@ -157,13 +157,13 @@ export function Toolbar({
             size="sm"
             className={cn(
               "h-6 px-2.5 text-[10px] font-medium gap-1.5",
-              "text-slate-300 hover:text-white hover:bg-white/10",
+              "text-muted-foreground hover:text-foreground hover:bg-foreground/10",
               "transition-colors"
             )}
           >
             <Table className="w-3 h-3" />
             View
-            <ChevronDown className="w-2.5 h-2.5 text-slate-400" />
+            <ChevronDown className="w-2.5 h-2.5" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-32">
@@ -202,17 +202,17 @@ export function Toolbar({
             size="sm"
             className={cn(
               "h-6 px-2.5 text-[10px] font-medium gap-1.5",
-              "text-slate-300 hover:text-white hover:bg-white/10",
+              "text-muted-foreground hover:text-foreground hover:bg-foreground/10",
               "transition-colors"
             )}
           >
             <Columns className="w-3 h-3" />
             Columns
-            <ChevronDown className="w-2.5 h-2.5 text-slate-400" />
+            <ChevronDown className="w-2.5 h-2.5" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-36">
-          <DropdownMenuLabel className="text-[9px] text-slate-500">
+          <DropdownMenuLabel className="text-[9px] text-muted-foreground">
             Toggle Columns
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
@@ -237,9 +237,9 @@ export function Toolbar({
             size="sm"
             className={cn(
               "h-6 px-2.5 text-[10px] font-medium gap-1.5",
-              "text-slate-300 hover:text-white hover:bg-white/10",
+              "text-muted-foreground hover:text-foreground hover:bg-foreground/10",
               "transition-colors",
-              hasActiveFilters && "text-blue-400 bg-blue-500/10"
+              hasActiveFilters && "text-primary bg-primary/10"
             )}
           >
             <Filter className="w-3 h-3" />
@@ -249,11 +249,11 @@ export function Toolbar({
                 {activeFilterCount}
               </span>
             )}
-            <ChevronDown className="w-2.5 h-2.5 text-slate-400" />
+            <ChevronDown className="w-2.5 h-2.5" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52">
-          <DropdownMenuLabel className="text-[9px] text-slate-500">
+          <DropdownMenuLabel className="text-[9px] text-muted-foreground">
             Filter by Type
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
@@ -279,7 +279,7 @@ export function Toolbar({
             );
           })}
           <DropdownMenuSeparator />
-          <DropdownMenuLabel className="text-[9px] text-slate-500">
+          <DropdownMenuLabel className="text-[9px] text-muted-foreground">
             Filter by Status
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
@@ -320,13 +320,13 @@ export function Toolbar({
             size="sm"
             className={cn(
               "h-6 px-2.5 text-[10px] font-medium gap-1.5",
-              "text-slate-300 hover:text-white hover:bg-white/10",
+              "text-muted-foreground hover:text-foreground hover:bg-foreground/10",
               "transition-colors"
             )}
           >
             <ArrowUpDown className="w-3 h-3" />
             Sort
-            <ChevronDown className="w-2.5 h-2.5 text-slate-400" />
+            <ChevronDown className="w-2.5 h-2.5" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-36">
@@ -375,13 +375,13 @@ export function Toolbar({
             size="sm"
             className={cn(
               "h-6 px-2.5 text-[10px] font-medium gap-1.5",
-              "text-slate-300 hover:text-white hover:bg-white/10",
+              "text-muted-foreground hover:text-foreground hover:bg-foreground/10",
               "transition-colors"
             )}
           >
             <Layers className="w-3 h-3" />
             Group
-            <ChevronDown className="w-2.5 h-2.5 text-slate-400" />
+            <ChevronDown className="w-2.5 h-2.5" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-36">
@@ -417,13 +417,13 @@ export function Toolbar({
             size="sm"
             className={cn(
               "h-6 px-2.5 text-[10px] font-medium gap-1.5",
-              "text-slate-300 hover:text-white hover:bg-white/10",
+              "text-muted-foreground hover:text-foreground hover:bg-foreground/10",
               "transition-colors"
             )}
           >
             <Download className="w-3 h-3" />
             Export
-            <ChevronDown className="w-2.5 h-2.5 text-slate-400" />
+            <ChevronDown className="w-2.5 h-2.5" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-36">
@@ -443,17 +443,17 @@ export function Toolbar({
             size="sm"
             className={cn(
               "h-6 px-2.5 text-[10px] font-medium gap-1.5",
-              "text-slate-300 hover:text-white hover:bg-white/10",
+              "text-muted-foreground hover:text-foreground hover:bg-foreground/10",
               "transition-colors"
             )}
           >
             <Bookmark className="w-3 h-3" />
             My Filters
-            <ChevronDown className="w-2.5 h-2.5 text-slate-400" />
+            <ChevronDown className="w-2.5 h-2.5" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-40">
-          <DropdownMenuLabel className="text-[9px] text-slate-500">
+          <DropdownMenuLabel className="text-[9px] text-muted-foreground">
             Quick Filters
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
@@ -530,7 +530,7 @@ export function Toolbar({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuLabel className="text-[9px] text-slate-500">
+          <DropdownMenuLabel className="text-[9px] text-muted-foreground">
             Add New Content
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
@@ -540,7 +540,7 @@ export function Toolbar({
           >
             <Link className="w-3.5 h-3.5 mr-2 text-cyan-500" />
             Import from URL
-            <span className="ml-auto text-[8px] text-slate-500">⌘N</span>
+            <span className="ml-auto text-[8px] text-muted-foreground">⌘N</span>
           </DropdownMenuItem>
           <DropdownMenuItem
             className="text-[10px] cursor-pointer"
@@ -556,7 +556,7 @@ export function Toolbar({
           >
             <Upload className="w-3.5 h-3.5 mr-2 text-purple-500" />
             Import from File
-            <span className="ml-auto text-[8px] text-slate-500">Soon</span>
+            <span className="ml-auto text-[8px] text-muted-foreground">Soon</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -564,27 +564,27 @@ export function Toolbar({
       {/* Bulk Actions (shown when items selected) */}
       {selectedCount > 0 && (
         <div className="flex items-center gap-1.5 mr-2">
-          <span className="text-[10px] text-slate-400 mr-1">
+          <span className="text-[10px] text-muted-foreground mr-1">
             {selectedCount} selected
           </span>
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 px-2 text-[10px] text-slate-400 hover:text-slate-200 hover:bg-white/5"
+            className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground hover:bg-foreground/5"
           >
             Merge
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 px-2 text-[10px] text-slate-400 hover:text-slate-200 hover:bg-white/5"
+            className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground hover:bg-foreground/5"
           >
             Archive
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 px-2 text-[10px] text-slate-400 hover:text-slate-200 hover:bg-white/5"
+            className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground hover:bg-foreground/5"
           >
             Tag
           </Button>
@@ -604,7 +604,7 @@ export function Toolbar({
       <Button
         variant="ghost"
         size="sm"
-        className="h-6 w-6 p-0 text-slate-400 hover:text-slate-200 hover:bg-white/5"
+        className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground hover:bg-foreground/5"
         onClick={onRefresh}
         title="Refresh"
       >

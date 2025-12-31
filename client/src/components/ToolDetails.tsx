@@ -84,11 +84,11 @@ export function ToolDetails({ tool: propTool, onClose }: ToolDetailsProps) {
   if (!selectedTool) {
     return (
       <div className="h-full flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-14 h-14 rounded-xl bg-slate-800/60 border border-slate-700/50 flex items-center justify-center mb-4">
-          <Hash className="w-6 h-6 text-slate-500" />
+        <div className="w-14 h-14 rounded-xl bg-muted border border-border flex items-center justify-center mb-4">
+          <Hash className="w-6 h-6 text-muted-foreground" />
         </div>
-        <h3 className="text-sm font-medium text-slate-300 mb-1">No tool selected</h3>
-        <p className="text-[11px] text-slate-500 max-w-[180px] leading-relaxed">
+        <h3 className="text-sm font-medium text-foreground mb-1">No tool selected</h3>
+        <p className="text-[11px] text-muted-foreground max-w-[180px] leading-relaxed">
           Select a tool from the list to view its details
         </p>
       </div>
@@ -130,10 +130,10 @@ export function ToolDetails({ tool: propTool, onClose }: ToolDetailsProps) {
 
   return (
     <TooltipProvider>
-      <div className="h-full flex flex-col overflow-hidden bg-[#1e2433]">
+      <div className="h-full flex flex-col overflow-hidden bg-background">
         {/* Header - Enhanced with gradient background */}
-        <div className="flex items-start justify-between p-3 border-b border-slate-700/50 bg-gradient-to-r from-slate-800/60 to-transparent">
-          <h2 className="text-sm font-semibold text-white truncate flex items-center gap-2">
+        <div className="flex items-start justify-between p-3 border-b border-border bg-gradient-to-r from-muted/60 to-transparent">
+          <h2 className="text-sm font-semibold text-foreground truncate flex items-center gap-2">
             {selectedTool.icon && <span className="text-base">{selectedTool.icon}</span>}
             <span className="truncate">{selectedTool.name}</span>
           </h2>
@@ -141,7 +141,7 @@ export function ToolDetails({ tool: propTool, onClose }: ToolDetailsProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              className="h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-foreground/10 transition-colors"
               onClick={onClose}
             >
               <X className="w-4 h-4" />
@@ -179,15 +179,15 @@ export function ToolDetails({ tool: propTool, onClose }: ToolDetailsProps) {
 
             {/* Description - with better visual separation */}
             <div className="pt-2">
-              <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-[0.05em] block mb-1.5">Description</span>
-              <p className="text-[11px] text-slate-200 leading-relaxed">
+              <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-[0.05em] block mb-1.5">Description</span>
+              <p className="text-[11px] text-foreground leading-relaxed">
                 {selectedTool.whatItIs || selectedTool.summary}
               </p>
             </div>
 
             {/* Tags - with styled chips */}
             <div>
-              <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-[0.05em] block mb-1.5">Tags</span>
+              <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-[0.05em] block mb-1.5">Tags</span>
               <div className="flex flex-wrap gap-1">
                 {selectedTool.tags?.length ? (
                   selectedTool.tags.map((tag, idx) => {
@@ -207,21 +207,21 @@ export function ToolDetails({ tool: propTool, onClose }: ToolDetailsProps) {
                     );
                   })
                 ) : (
-                  <span className="text-[10px] text-slate-500 italic">No tags</span>
+                  <span className="text-[10px] text-muted-foreground italic">No tags</span>
                 )}
               </div>
             </div>
 
             {/* Metadata Section */}
-            <div className="pt-2 mt-2 border-t border-slate-700/30 space-y-2">
+            <div className="pt-2 mt-2 border-t border-border/50 space-y-2">
               {/* Source */}
               <div className="flex items-center justify-between">
-                <span className="text-[9px] font-medium text-slate-500 uppercase tracking-wider">Source</span>
+                <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider">Source</span>
                 <a
                   href={selectedTool.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[10px] text-blue-400 flex items-center gap-1 hover:text-blue-300 hover:underline transition-colors"
+                  className="text-[10px] text-primary flex items-center gap-1 hover:text-primary/80 hover:underline transition-colors"
                 >
                   <Link2 className="w-3 h-3" />
                   {getSourceDomain(selectedTool.url)}
@@ -230,55 +230,55 @@ export function ToolDetails({ tool: propTool, onClose }: ToolDetailsProps) {
 
               {/* Rating */}
               <div className="flex items-center justify-between">
-                <span className="text-[9px] font-medium text-slate-500 uppercase tracking-wider">Rating</span>
+                <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider">Rating</span>
                 <span className="text-[11px] text-amber-400 tracking-tight">
                   {'★'.repeat(Math.min(5, Math.ceil((selectedTool.usage || 50) / 20)))}
-                  <span className="text-slate-600">{'★'.repeat(5 - Math.min(5, Math.ceil((selectedTool.usage || 50) / 20)))}</span>
+                  <span className="text-muted-foreground/40">{'★'.repeat(5 - Math.min(5, Math.ceil((selectedTool.usage || 50) / 20)))}</span>
                 </span>
               </div>
 
               {/* Access */}
               <div className="flex items-center justify-between">
-                <span className="text-[9px] font-medium text-slate-500 uppercase tracking-wider">Access</span>
-                <span className="text-[10px] text-slate-200 flex items-center gap-1.5">
-                  <Globe className="w-3 h-3 text-emerald-400" />
+                <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider">Access</span>
+                <span className="text-[10px] text-foreground flex items-center gap-1.5">
+                  <Globe className="w-3 h-3 text-emerald-500" />
                   {getAccessLabel(selectedTool)}
                 </span>
               </div>
 
               {/* Owner */}
               <div className="flex items-center justify-between">
-                <span className="text-[9px] font-medium text-slate-500 uppercase tracking-wider">Owner</span>
-                <span className="text-[10px] text-slate-200 flex items-center gap-1.5">
-                  <Users className="w-3 h-3 text-slate-400" />
+                <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider">Owner</span>
+                <span className="text-[10px] text-foreground flex items-center gap-1.5">
+                  <Users className="w-3 h-3 text-muted-foreground" />
                   {getOwner(selectedTool)}
                 </span>
               </div>
 
               {/* Date Added */}
               <div className="flex items-center justify-between">
-                <span className="text-[9px] font-medium text-slate-500 uppercase tracking-wider">Added</span>
-                <span className="text-[10px] text-slate-200 flex items-center gap-1.5">
-                  <Calendar className="w-3 h-3 text-slate-400" />
+                <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider">Added</span>
+                <span className="text-[10px] text-foreground flex items-center gap-1.5">
+                  <Calendar className="w-3 h-3 text-muted-foreground" />
                   {formatDate(selectedTool.createdAt)}
                 </span>
               </div>
 
               {/* Last Modified */}
               <div className="flex items-center justify-between">
-                <span className="text-[9px] font-medium text-slate-500 uppercase tracking-wider">Modified</span>
-                <span className="text-[10px] text-slate-300">
+                <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider">Modified</span>
+                <span className="text-[10px] text-muted-foreground">
                   {formatRelativeTime(selectedTool.createdAt)}
                 </span>
               </div>
             </div>
 
             {/* Trend & Usage - Enhanced card styling */}
-            <div className="pt-3 mt-1 border-t border-slate-700/30">
+            <div className="pt-3 mt-1 border-t border-border/50">
               <div className="grid grid-cols-2 gap-2">
-                <div className="p-2.5 rounded-md bg-slate-800/60 border border-slate-700/40">
-                  <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                    <TrendingUp className="w-3 h-3 text-emerald-400" />
+                <div className="p-2.5 rounded-md bg-muted/60 border border-border/50">
+                  <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3 text-emerald-500" />
                     Trend
                   </div>
                   <Sparkline
@@ -288,14 +288,14 @@ export function ToolDetails({ tool: propTool, onClose }: ToolDetailsProps) {
                     strokeWidth={1.5}
                   />
                 </div>
-                <div className="p-2.5 rounded-md bg-slate-800/60 border border-slate-700/40">
-                  <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                    <Activity className="w-3 h-3 text-blue-400" />
+                <div className="p-2.5 rounded-md bg-muted/60 border border-border/50">
+                  <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                    <Activity className="w-3 h-3 text-primary" />
                     Usage
                   </div>
                   <div className="flex items-center gap-2">
                     <UsageBar value={selectedTool.usage || 50} width={45} height={5} />
-                    <span className="text-[10px] font-semibold text-slate-200">
+                    <span className="text-[10px] font-semibold text-foreground">
                       {selectedTool.usage || 50}%
                     </span>
                   </div>
@@ -306,13 +306,13 @@ export function ToolDetails({ tool: propTool, onClose }: ToolDetailsProps) {
         </div>
 
         {/* Action Buttons - Enhanced styling */}
-        <div className="flex items-center gap-2 p-3 border-t border-slate-700/50 bg-slate-900/30">
+        <div className="flex items-center gap-2 p-3 border-t border-border bg-muted/30">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-7 p-0 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
+                className="h-7 w-7 p-0 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                 onClick={handleCopyLink}
               >
                 <Copy className="w-3.5 h-3.5" />
@@ -329,7 +329,7 @@ export function ToolDetails({ tool: propTool, onClose }: ToolDetailsProps) {
                   "h-7 w-7 p-0 transition-colors",
                   selectedTool.isPinned
                     ? "text-amber-400 hover:text-amber-300 hover:bg-amber-500/10"
-                    : "text-slate-400 hover:text-amber-400 hover:bg-amber-500/10"
+                    : "text-muted-foreground hover:text-amber-400 hover:bg-amber-500/10"
                 )}
                 onClick={handleTogglePin}
               >
@@ -344,7 +344,7 @@ export function ToolDetails({ tool: propTool, onClose }: ToolDetailsProps) {
                 href={selectedTool.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="h-7 w-7 p-0 inline-flex items-center justify-center rounded-md text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+                className="h-7 w-7 p-0 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
@@ -355,7 +355,7 @@ export function ToolDetails({ tool: propTool, onClose }: ToolDetailsProps) {
           <Button
             variant="outline"
             size="sm"
-            className="h-7 px-3 text-[10px] bg-transparent border-slate-600 text-slate-300 hover:bg-white/5 hover:text-white hover:border-slate-500 transition-colors"
+            className="h-7 px-3 text-[10px]"
             onClick={() => setIsEditModalOpen(true)}
           >
             <Edit2 className="w-3 h-3 mr-1.5" />
@@ -364,7 +364,7 @@ export function ToolDetails({ tool: propTool, onClose }: ToolDetailsProps) {
           <Button
             variant="outline"
             size="sm"
-            className="h-7 px-3 text-[10px] bg-transparent border-red-500/40 text-red-400 hover:bg-red-500/10 hover:border-red-500/60 transition-colors"
+            className="h-7 px-3 text-[10px] border-destructive/40 text-destructive hover:bg-destructive/10 hover:border-destructive/60 transition-colors"
             onClick={handleDelete}
           >
             <Trash2 className="w-3 h-3 mr-1.5" />
