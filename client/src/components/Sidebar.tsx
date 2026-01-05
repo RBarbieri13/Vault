@@ -65,47 +65,46 @@ function SidebarItem({
   return (
     <div
       className={cn(
-        "flex items-center gap-1.5 py-1.5 pr-2 cursor-pointer transition-all duration-150 group",
-        "text-[11px] leading-tight",
+        "flex items-center gap-2 py-1 pr-2 cursor-pointer transition-all duration-100 group",
+        "text-[13px] leading-[1.4] font-normal",
         isSelected
-          ? "bg-gradient-to-r from-primary/20 to-transparent border-l-[3px] border-l-primary text-foreground font-semibold"
-          : "text-sidebar-foreground hover:bg-foreground/8 hover:text-foreground border-l-[3px] border-l-transparent"
+          ? "bg-sidebar-accent text-white font-medium"
+          : "text-sidebar-foreground/90 hover:bg-sidebar-accent/50 hover:text-white"
       )}
-      style={{ paddingLeft: paddingLeft - 3 }}
+      style={{ paddingLeft: paddingLeft }}
       onClick={hasChildren ? onToggle : onClick}
     >
       {/* Expand/collapse chevron */}
       {hasChildren ? (
         <span className={cn(
-          "w-3 h-3 flex items-center justify-center transition-transform duration-150",
-          isExpanded ? "text-foreground" : "text-muted-foreground"
+          "w-4 h-4 flex items-center justify-center transition-transform duration-150 flex-shrink-0",
+          isExpanded ? "text-white" : "text-sidebar-foreground/60"
         )}>
           {isExpanded ? (
-            <ChevronDown className="w-2.5 h-2.5" />
+            <ChevronDown className="w-3 h-3" />
           ) : (
-            <ChevronRight className="w-2.5 h-2.5" />
+            <ChevronRight className="w-3 h-3" />
           )}
         </span>
       ) : (
-        <span className="w-3" />
+        <span className="w-4" />
       )}
 
       {/* Icon */}
       {icon && (
-        <span className="w-4 h-4 flex items-center justify-center flex-shrink-0 text-muted-foreground">
+        <span className="w-4 h-4 flex items-center justify-center flex-shrink-0 text-sidebar-foreground/70">
           {icon}
         </span>
       )}
 
       {/* Label */}
-      <span className="truncate flex-1 font-medium">{label}</span>
+      <span className="truncate flex-1">{label}</span>
 
       {/* Count badge */}
       {count !== undefined && count > 0 && (
         <span className={cn(
-          "text-[10px] min-w-[20px] text-center px-1.5 py-0.5 rounded-full",
-          "bg-foreground/10",
-          isSelected ? "text-primary" : "text-muted-foreground"
+          "text-[11px] min-w-[18px] text-center px-1.5 py-0 rounded",
+          "bg-sidebar-foreground/15 text-sidebar-foreground/70 font-normal"
         )}>
           {count}
         </span>
@@ -129,27 +128,26 @@ function SectionHeader({ label, icon, count, isExpanded, onToggle }: SectionHead
   return (
     <div
       className={cn(
-        "flex items-center gap-1.5 px-3 py-2 cursor-pointer mt-2",
-        "text-[10px] font-bold uppercase tracking-[0.08em]",
-        "text-muted-foreground hover:text-foreground transition-colors",
-        "border-l-2 border-l-primary/40"
+        "flex items-center gap-2 px-2 py-1.5 cursor-pointer mt-3 mb-0.5",
+        "text-[11px] font-semibold uppercase tracking-wide",
+        "text-sidebar-foreground/50 hover:text-sidebar-foreground/80 transition-colors"
       )}
       onClick={onToggle}
     >
       <span className={cn(
         "w-3 h-3 flex items-center justify-center transition-transform duration-150",
-        isExpanded ? "text-foreground" : "text-muted-foreground"
+        isExpanded ? "text-sidebar-foreground/70" : "text-sidebar-foreground/50"
       )}>
         {isExpanded ? (
-          <ChevronDown className="w-2.5 h-2.5" />
+          <ChevronDown className="w-3 h-3" />
         ) : (
-          <ChevronRight className="w-2.5 h-2.5" />
+          <ChevronRight className="w-3 h-3" />
         )}
       </span>
-      {icon && <span className="w-3 h-3 flex items-center justify-center text-muted-foreground">{icon}</span>}
+      {icon && <span className="w-3 h-3 flex items-center justify-center text-sidebar-foreground/50">{icon}</span>}
       <span className="flex-1">{label}</span>
       {count !== undefined && count > 0 && (
-        <span className="text-[9px] text-muted-foreground bg-foreground/10 px-1.5 py-0.5 rounded-full">
+        <span className="text-[10px] text-sidebar-foreground/50 bg-sidebar-foreground/10 px-1.5 py-0 rounded font-normal">
           {count}
         </span>
       )}
@@ -288,13 +286,13 @@ export function Sidebar({ className }: { className?: string }) {
       className
     )}>
       {/* Header */}
-      <div className="p-3 border-b border-sidebar-border">
+      <div className="p-3 border-b border-sidebar-border/40">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <div className="bg-primary text-primary-foreground p-1.5 rounded">
               <Box className="w-4 h-4" />
             </div>
-            <h2 className="font-semibold text-sm tracking-tight text-foreground">AI Vault</h2>
+            <h2 className="font-semibold text-[14px] tracking-tight text-white">AI Vault</h2>
           </div>
           <div className="flex items-center gap-0.5">
             <ModeToggle />
@@ -303,9 +301,9 @@ export function Sidebar({ className }: { className?: string }) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-foreground/10"
+                  className="h-7 w-7 text-sidebar-foreground/60 hover:text-white hover:bg-sidebar-accent/50"
                 >
-                  <MoreHorizontal className="w-3.5 h-3.5" />
+                  <MoreHorizontal className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
@@ -331,14 +329,14 @@ export function Sidebar({ className }: { className?: string }) {
 
         {/* Search */}
         <div className="relative group">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground group-focus-within:text-foreground transition-colors" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-sidebar-foreground/50 group-focus-within:text-sidebar-foreground/80 transition-colors" />
           <Input
             id="sidebar-search"
             placeholder="Search All..."
             className={cn(
-              "pl-8 h-8 text-[11px] bg-secondary border-border",
-              "text-foreground placeholder:text-muted-foreground",
-              "focus-visible:ring-1 focus-visible:ring-primary/50 focus-visible:bg-card"
+              "pl-8 h-7 text-[13px] bg-sidebar-accent/60 border-sidebar-accent",
+              "text-white placeholder:text-sidebar-foreground/40",
+              "focus-visible:ring-1 focus-visible:ring-primary/30 focus-visible:bg-sidebar-accent/80 focus-visible:border-primary/30"
             )}
             value={state.searchQuery}
             onChange={(e) => dispatch({ type: 'SET_SEARCH_QUERY', payload: { query: e.target.value } })}
