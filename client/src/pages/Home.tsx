@@ -5,7 +5,7 @@ import { Toolbar } from '@/components/Toolbar';
 import { StatusBar } from '@/components/StatusBar';
 import { ToolDetails } from '@/components/ToolDetails';
 import { ToolModal } from '@/components/ToolModal';
-import { Breadcrumb, defaultBreadcrumb } from '@/components/Breadcrumb';
+import { Breadcrumb } from '@/components/Breadcrumb';
 import { KeyboardShortcutsBar } from '@/components/KeyboardShortcutsBar';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { Menu, Loader2 } from 'lucide-react';
@@ -109,8 +109,8 @@ export default function Home() {
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col h-full overflow-hidden bg-background">
-        {/* Breadcrumb Navigation */}
-        <Breadcrumb items={defaultBreadcrumb} />
+        {/* Navigation Tabs */}
+        <Breadcrumb />
 
         {/* Toolbar with dropdown filters */}
         <Toolbar

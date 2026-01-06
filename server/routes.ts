@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertCategorySchema, insertToolSchema, insertCollectionSchema, type Category } from "@shared/schema";
 import { fromError } from "zod-validation-error";
-import { analyzeUrl } from "./services/url-analyzer";
+import { analyzeUrl, checkAIServiceStatus } from "./services/url-analyzer";
 
 // Category cache for faster URL analysis
 let categoryCache: { data: Pick<Category, "id" | "name">[]; timestamp: number } | null = null;
@@ -74,6 +74,15 @@ export async function registerRoutes(
       status: "healthy",
       timestamp: new Date().toISOString(),
       version: process.env.npm_package_version || "1.0.0"
+    });
+  });
+
+  // AI Service health check
+  app.get("/api/ai/status", (_req, res) => {
+    const aiStatus = checkAIServiceStatus();
+    res.json({
+      ...aiStatus,
+      timestamp: new Date().toISOString()
     });
   });
 

@@ -19,9 +19,6 @@ import {
   Trash2,
   Plus,
   Check,
-  Link,
-  FileText,
-  Upload,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -509,57 +506,23 @@ export function Toolbar({
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Add Content Button - Primary Action */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            size="sm"
-            className={cn(
-              "h-6 px-3.5 text-[10px] font-semibold gap-1.5",
-              "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500",
-              "text-white",
-              "shadow-md shadow-blue-500/30",
-              "transition-all duration-150",
-              "hover:shadow-lg hover:shadow-blue-500/40 hover:-translate-y-0.5",
-              "active:translate-y-0"
-            )}
-          >
-            <Plus className="w-3.5 h-3.5" />
-            Add
-            <ChevronDown className="w-2.5 h-2.5 opacity-80" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuLabel className="text-[9px] text-muted-foreground">
-            Add New Content
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            className="text-[10px] cursor-pointer"
-            onClick={onAddTool}
-          >
-            <Link className="w-3.5 h-3.5 mr-2 text-cyan-500" />
-            Import from URL
-            <span className="ml-auto text-[8px] text-muted-foreground">⌘N</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className="text-[10px] cursor-pointer"
-            onClick={onAddTool}
-          >
-            <FileText className="w-3.5 h-3.5 mr-2 text-emerald-500" />
-            Add Manually
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            className="text-[10px] cursor-pointer opacity-50"
-            disabled
-          >
-            <Upload className="w-3.5 h-3.5 mr-2 text-purple-500" />
-            Import from File
-            <span className="ml-auto text-[8px] text-muted-foreground">Soon</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {/* Add Content Button - Direct Action */}
+      <Button
+        size="sm"
+        onClick={onAddTool}
+        className={cn(
+          "h-6 px-3.5 text-[10px] font-semibold gap-1.5",
+          "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500",
+          "text-white",
+          "shadow-md shadow-blue-500/30",
+          "transition-all duration-150",
+          "hover:shadow-lg hover:shadow-blue-500/40 hover:-translate-y-0.5",
+          "active:translate-y-0"
+        )}
+      >
+        <Plus className="w-3.5 h-3.5" />
+        Add Tool
+      </Button>
 
       {/* Bulk Actions (shown when items selected) */}
       {selectedCount > 0 && (

@@ -37,6 +37,38 @@ function getAnthropicClient(): Anthropic {
   return anthropicClient;
 }
 
+// Check if AI service is configured and available
+export function checkAIServiceStatus(): {
+  configured: boolean;
+  status: "connected" | "disconnected" | "unconfigured";
+  message: string;
+} {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+
+  if (!apiKey) {
+    return {
+      configured: false,
+      status: "unconfigured",
+      message: "ANTHROPIC_API_KEY environment variable is not set"
+    };
+  }
+
+  // Check if key appears to be valid format (starts with sk-ant-)
+  if (!apiKey.startsWith("sk-ant-")) {
+    return {
+      configured: false,
+      status: "disconnected",
+      message: "API key format appears invalid"
+    };
+  }
+
+  return {
+    configured: true,
+    status: "connected",
+    message: "AI service is configured and ready"
+  };
+}
+
 // Content type detection sets for faster lookup
 const VIDEO_HOSTS = new Set(["youtube.com", "youtu.be", "vimeo.com", "dailymotion.com", "twitch.tv"]);
 const PODCAST_HOSTS = new Set(["spotify.com", "podcasts.apple.com", "anchor.fm", "transistor.fm", "podbean.com", "buzzsprout.com"]);
@@ -237,6 +269,9 @@ export async function analyzeUrl(
     }
     if (message.includes("ANTHROPIC_API_KEY")) {
       return { success: false, error: "AI service not configured", errorType: "AI_CONFIG_ERROR" };
+    }
+    if (message.includes("credit balance") || message.includes("billing")) {
+      return { success: false, error: "AI service billing issue - check API credits", errorType: "AI_BILLING_ERROR" };
     }
     if (message.includes("JSON") || message.includes("parse")) {
       return { success: false, error: "AI analysis failed - try again", errorType: "AI_PARSE_ERROR" };

@@ -4,9 +4,11 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* Gumroad-style font stack */
+  --font-sans: 'Mona Sans', 'Helvetica Neue', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
+  /* Increased border radius for playful feel */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -56,117 +58,131 @@
   --color-sidebar-ring: hsl(var(--sidebar-ring));
 }
 
-/* Base radius variable */
+/* Base radius variable - increased for Gumroad playful style */
 :root {
-  --radius: 0.4rem;
+  --radius: 0.75rem;
 }
 
-/* AI Vault Dark Theme - Default and explicit .dark */
+/* =====================================================
+   GUMROAD DARK MODE - Pure black with vibrant accents
+   ===================================================== */
 :root,
 :root.dark,
 .dark {
-  --background: 220 20% 10%;
-  --foreground: 210 40% 98%;
+  /* Pure black background like Gumroad dark sections */
+  --background: 0 0% 0%;
+  --foreground: 48 100% 97%;
 
-  --card: 220 20% 12%;
-  --card-foreground: 210 40% 98%;
-
-  --popover: 220 20% 12%;
-  --popover-foreground: 210 40% 98%;
-
-  --primary: 190 80% 50%;
-  --primary-foreground: 220 20% 10%;
-
-  --secondary: 220 15% 20%;
-  --secondary-foreground: 210 40% 98%;
-
-  --muted: 220 15% 18%;
-  --muted-foreground: 215 20% 55%;
-
-  --accent: 190 80% 50%;
-  --accent-foreground: 220 20% 10%;
-
-  --destructive: 0 62.8% 50%;
-  --destructive-foreground: 0 0% 98%;
-
-  --border: 220 15% 20%;
-  --input: 220 15% 20%;
-  --ring: 190 80% 50%;
-
-  --sidebar: 220 10% 14%;
-  --sidebar-foreground: 0 0% 95%;
-  --sidebar-primary: 190 80% 50%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 220 10% 20%;
-  --sidebar-accent-foreground: 0 0% 95%;
-  --sidebar-border: 220 10% 20%;
-  --sidebar-ring: 190 80% 50%;
-
-  --chart-1: 220 70% 50%;
-  --chart-2: 160 60% 45%;
-  --chart-3: 30 80% 55%;
-  --chart-4: 280 65% 60%;
-  --chart-5: 340 75% 55%;
-}
-
-/* Light mode override - Professional clean design */
-/* Use html.light for highest specificity to ensure override */
-html.light,
-:root.light,
-.light {
-  /* Core backgrounds - subtle warm gray tones for professional look */
-  --background: 220 20% 97%;
-  --foreground: 222 47% 11%;
-
-  /* Cards with subtle elevation */
-  --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
+  /* Dark cards with slight elevation */
+  --card: 0 0% 6%;
+  --card-foreground: 48 100% 97%;
 
   /* Popovers/dropdowns */
-  --popover: 0 0% 100%;
-  --popover-foreground: 222 47% 11%;
+  --popover: 0 0% 8%;
+  --popover-foreground: 48 100% 97%;
 
-  /* Primary accent - professional blue */
-  --primary: 217 91% 50%;
-  --primary-foreground: 0 0% 100%;
+  /* Primary = Gumroad Pink #FF90E8 */
+  --primary: 314 100% 78%;
+  --primary-foreground: 0 0% 0%;
 
-  /* Secondary - subtle gray */
-  --secondary: 220 14% 96%;
-  --secondary-foreground: 222 47% 11%;
+  /* Secondary = Gumroad Yellow #FFE600 */
+  --secondary: 54 100% 50%;
+  --secondary-foreground: 0 0% 0%;
 
-  /* Muted elements */
-  --muted: 220 14% 96%;
-  --muted-foreground: 215 16% 47%;
+  /* Muted - dark gray */
+  --muted: 0 0% 12%;
+  --muted-foreground: 0 0% 60%;
 
-  /* Accent color - matches primary for consistency */
-  --accent: 217 91% 50%;
+  /* Accent = Purple #8B5CF6 */
+  --accent: 258 90% 66%;
   --accent-foreground: 0 0% 100%;
 
-  /* Destructive/error states */
-  --destructive: 0 84% 60%;
+  /* Destructive = Orange #FF6B35 */
+  --destructive: 14 100% 60%;
   --destructive-foreground: 0 0% 100%;
 
   /* Borders and inputs */
-  --border: 220 13% 91%;
-  --input: 220 13% 91%;
-  --ring: 217 91% 50%;
+  --border: 0 0% 18%;
+  --input: 0 0% 18%;
+  --ring: 314 100% 78%;
 
-  /* Sidebar - distinct color for better separation */
-  --sidebar: 214 32% 91%;
-  --sidebar-foreground: 222 47% 25%;
-  --sidebar-primary: 217 91% 50%;
+  /* Sidebar - slightly elevated from background */
+  --sidebar: 0 0% 4%;
+  --sidebar-foreground: 48 100% 97%;
+  --sidebar-primary: 314 100% 78%;
+  --sidebar-primary-foreground: 0 0% 0%;
+  --sidebar-accent: 54 100% 50%;
+  --sidebar-accent-foreground: 0 0% 0%;
+  --sidebar-border: 0 0% 15%;
+  --sidebar-ring: 314 100% 78%;
+
+  /* Chart colors - Gumroad warm palette */
+  --chart-1: 314 100% 78%;
+  --chart-2: 54 100% 50%;
+  --chart-3: 258 90% 66%;
+  --chart-4: 14 100% 60%;
+  --chart-5: 180 70% 50%;
+}
+
+/* =====================================================
+   GUMROAD LIGHT MODE - Cream background with vibrant accents
+   ===================================================== */
+html.light,
+:root.light,
+.light {
+  /* Cream/off-white background like Gumroad */
+  --background: 48 100% 97%;
+  --foreground: 0 0% 0%;
+
+  /* White cards with subtle warmth */
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 0%;
+
+  /* Popovers/dropdowns - pure white */
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 0%;
+
+  /* Primary = Gumroad Pink #FF90E8 */
+  --primary: 314 100% 78%;
+  --primary-foreground: 0 0% 0%;
+
+  /* Secondary = Gumroad Yellow #FFE600 */
+  --secondary: 54 100% 50%;
+  --secondary-foreground: 0 0% 0%;
+
+  /* Muted - warm light gray (darker text for better readability) */
+  --muted: 48 20% 95%;
+  --muted-foreground: 0 0% 20%;
+
+  /* Accent = Purple #8B5CF6 */
+  --accent: 258 90% 66%;
+  --accent-foreground: 0 0% 100%;
+
+  /* Destructive = Orange #FF6B35 */
+  --destructive: 14 100% 60%;
+  --destructive-foreground: 0 0% 100%;
+
+  /* Borders and inputs - light warm gray */
+  --border: 0 0% 88%;
+  --input: 0 0% 88%;
+  --ring: 314 100% 78%;
+
+  /* Sidebar - subtle gray with pink undertone for distinction */
+  --sidebar: 240 5% 96%;
+  --sidebar-foreground: 240 10% 20%;
+  --sidebar-primary: 314 100% 65%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 217 91% 95%;
-  --sidebar-accent-foreground: 217 91% 40%;
-  --sidebar-border: 220 13% 85%;
-  --sidebar-ring: 217 91% 50%;
+  --sidebar-accent: 314 60% 92%;
+  --sidebar-accent-foreground: 240 10% 15%;
+  --sidebar-border: 240 5% 88%;
+  --sidebar-ring: 314 100% 65%;
 
-  /* Charts with good contrast */
-  --chart-1: 217 91% 50%;
-  --chart-2: 160 84% 39%;
-  --chart-3: 43 96% 56%;
-  --chart-4: 280 67% 58%;
-  --chart-5: 0 84% 60%;
+  /* Chart colors - same warm palette */
+  --chart-1: 314 100% 70%;
+  --chart-2: 54 100% 45%;
+  --chart-3: 258 80% 60%;
+  --chart-4: 14 90% 55%;
+  --chart-5: 180 60% 45%;
 }
 
 @layer base {
@@ -175,10 +191,15 @@ html.light,
   }
   body {
     @apply font-sans antialiased bg-background text-foreground;
+    /* Slightly larger base font for Gumroad feel */
+    font-size: 15px;
+    line-height: 1.6;
   }
 }
 
-/* Ultra-dense theme utilities */
+/* =====================================================
+   GUMROAD STYLE UTILITIES
+   ===================================================== */
 @layer utilities {
   /* Hide scrollbar but allow scrolling */
   .hide-scrollbar {
@@ -189,60 +210,61 @@ html.light,
     display: none;
   }
 
-  /* Custom scrollbar styling - theme aware */
+  /* Custom scrollbar styling - Gumroad themed */
   .thin-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.15) rgba(0, 0, 0, 0.2);
+    scrollbar-color: rgba(255, 144, 232, 0.3) rgba(0, 0, 0, 0.1);
   }
   .thin-scrollbar::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
   .thin-scrollbar::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.1);
     border-radius: 4px;
   }
   .thin-scrollbar::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 144, 232, 0.4);
     border-radius: 4px;
     transition: background-color 0.15s ease;
   }
   .thin-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(255, 255, 255, 0.25);
+    background-color: rgba(255, 144, 232, 0.6);
   }
 
   /* Light mode scrollbar styling */
   .light .thin-scrollbar {
-    scrollbar-color: rgba(0, 0, 0, 0.15) rgba(0, 0, 0, 0.05);
+    scrollbar-color: rgba(255, 144, 232, 0.4) rgba(0, 0, 0, 0.05);
   }
   .light .thin-scrollbar::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.05);
+    background: rgba(0, 0, 0, 0.03);
   }
   .light .thin-scrollbar::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.15);
+    background-color: rgba(255, 144, 232, 0.5);
   }
   .light .thin-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(0, 0, 0, 0.25);
+    background-color: rgba(255, 144, 232, 0.7);
   }
 
-  /* Data-dense typography */
+  /* Typography - more spacious for Gumroad feel */
   .text-dense {
-    font-size: 11px;
-    line-height: 1.3;
+    font-size: 13px;
+    line-height: 1.5;
     letter-spacing: -0.01em;
   }
 
   .text-micro {
-    font-size: 10px;
-    line-height: 1.2;
+    font-size: 12px;
+    line-height: 1.4;
     letter-spacing: 0;
   }
 
   .text-nano {
-    font-size: 9px;
-    line-height: 1.1;
-    letter-spacing: 0.02em;
+    font-size: 10px;
+    line-height: 1.3;
+    letter-spacing: 0.03em;
     text-transform: uppercase;
+    font-weight: 600;
   }
 
   /* Tabular numbers for data */
@@ -253,33 +275,34 @@ html.light,
   /* Monospace tree connectors */
   .tree-connector {
     font-family: var(--font-mono);
-    font-size: 10px;
-    color: rgb(100 116 139 / 0.5);
+    font-size: 11px;
+    color: hsl(var(--muted-foreground));
     user-select: none;
   }
 
-  /* Row hover state - only show actions on hover */
+  /* Row hover state - smooth transitions */
   .row-actions {
     opacity: 0;
-    transition: opacity 0.15s ease;
+    transition: opacity 0.2s ease;
   }
   .group:hover .row-actions,
   .row-actions:focus-within {
     opacity: 1;
   }
 
-  /* Keyboard focus ring */
+  /* Keyboard focus ring - Gumroad pink */
   .focus-ring {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-1;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
+    --tw-ring-color: hsl(314 100% 78%);
   }
 
-  /* Dense grid row */
+  /* Dense grid row - slightly more spacious */
   .dense-row {
-    height: 28px;
-    min-height: 28px;
+    height: 36px;
+    min-height: 36px;
   }
 
-  /* AI Vault specific colors - use CSS variables for theme support */
+  /* Gumroad-style background classes */
   .ai-vault-bg {
     background-color: hsl(var(--background));
   }
@@ -292,83 +315,87 @@ html.light,
     background-color: hsl(var(--card));
   }
 
-  /* Type badge sizes */
+  /* Type badge sizes - more rounded */
   .badge-sm {
-    font-size: 9px;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-weight: 500;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: 600;
   }
 
   .badge-xs {
-    font-size: 8px;
-    padding: 1px 4px;
-    border-radius: 2px;
-    font-weight: 500;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
   }
 
   /* Sparkline container */
   .sparkline-container {
     display: inline-flex;
     align-items: center;
-    height: 16px;
+    height: 18px;
   }
 
-  /* Status bar styling */
+  /* Status bar styling - more spacious */
   .status-bar {
-    font-size: 10px;
-    height: 22px;
-    min-height: 22px;
+    font-size: 11px;
+    height: 32px;
+    min-height: 32px;
   }
 
-  /* Toolbar compact */
+  /* Toolbar - more spacious */
   .toolbar-compact {
-    height: 36px;
-    min-height: 36px;
+    height: 48px;
+    min-height: 48px;
   }
 
-  /* Filter chip */
+  /* Filter chip - more rounded */
   .filter-chip {
-    font-size: 10px;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-weight: 500;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-weight: 600;
     white-space: nowrap;
   }
 
-  /* Keyboard shortcut hint */
+  /* Keyboard shortcut hint - Gumroad style */
   .kbd {
-    font-size: 9px;
-    padding: 2px 4px;
-    border-radius: 3px;
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 10px;
+    padding: 3px 6px;
+    border-radius: 6px;
+    background-color: hsl(var(--muted));
+    border: 1px solid hsl(var(--border));
     font-family: var(--font-mono);
+    font-weight: 500;
   }
 
-  /* Cyan accent highlight */
+  /* Pink accent highlight - Gumroad style */
   .cyan-highlight {
-    background-color: rgba(6, 182, 212, 0.2);
-    border-left: 2px solid rgb(6, 182, 212);
+    background-color: hsl(314 100% 78% / 0.15);
+    border-left: 3px solid hsl(314 100% 78%);
   }
 
-  /* Selection indicator */
+  /* Selection indicator - Gumroad pink */
   .selection-indicator {
-    @apply bg-cyan-500/20 border-l-2 border-l-cyan-400;
+    background-color: hsl(314 100% 78% / 0.15);
+    border-left: 3px solid hsl(314 100% 78%);
   }
 }
 
-/* Dropdown menu dark styling */
+/* Dropdown menu Gumroad styling */
 [data-radix-popper-content-wrapper] {
-  --tw-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+  --tw-shadow: 0 8px 24px -4px rgb(0 0 0 / 0.2), 0 4px 8px -4px rgb(0 0 0 / 0.1);
 }
 
-/* Micro-interactions and animations */
+/* =====================================================
+   GUMROAD MICRO-INTERACTIONS AND ANIMATIONS
+   ===================================================== */
 @layer utilities {
-  /* Expand/collapse animation */
+  /* Expand/collapse animation - smoother */
   .expand-collapse {
     overflow: hidden;
-    transition: max-height 0.2s ease-out, opacity 0.15s ease;
+    transition: max-height 0.3s ease-out, opacity 0.2s ease;
   }
 
   .expand-collapse-collapsed {
@@ -383,78 +410,82 @@ html.light,
 
   /* Chevron rotation */
   .chevron-rotate {
-    transition: transform 0.2s ease;
+    transition: transform 0.25s ease;
   }
 
   .chevron-rotated {
     transform: rotate(90deg);
   }
 
-  /* Button press feedback */
+  /* Button press feedback - Gumroad bounce */
   .btn-press:active {
-    transform: scale(0.98);
+    transform: scale(0.96);
   }
 
   /* Checkbox animation */
   .checkbox-animated {
-    transition: all 0.15s ease;
+    transition: all 0.2s ease;
   }
 
   @keyframes checkmark-pop {
     0% { transform: scale(0.8); }
-    50% { transform: scale(1.1); }
+    50% { transform: scale(1.15); }
     100% { transform: scale(1); }
   }
 
   .checkbox-pop {
-    animation: checkmark-pop 0.2s ease;
+    animation: checkmark-pop 0.25s ease;
   }
 
-  /* Row hover transition */
+  /* Row hover transition - smoother */
   .row-hover-transition {
-    transition: background-color 0.1s ease;
+    transition: background-color 0.2s ease, transform 0.2s ease;
   }
 
   /* Shortcut hint styling */
   .shortcut-hint {
-    color: #64748b;
+    color: hsl(var(--muted-foreground));
     font-size: 10px;
     font-family: var(--font-mono);
-    background: rgba(255, 255, 255, 0.05);
-    padding: 2px 4px;
-    border-radius: 3px;
+    background: hsl(var(--muted));
+    padding: 3px 6px;
+    border-radius: 6px;
     margin-left: 8px;
+    font-weight: 500;
   }
 
-  /* Enhanced selection indicator */
+  /* Enhanced selection indicator - Gumroad gradient */
   .selection-indicator-enhanced {
-    @apply bg-gradient-to-r from-blue-500/20 to-transparent border-l-[3px] border-l-blue-500;
+    background: linear-gradient(to right, hsl(314 100% 78% / 0.2), transparent);
+    border-left: 3px solid hsl(314 100% 78%);
   }
 
-  /* Active toolbar button */
+  /* Active toolbar button - Gumroad pink */
   .toolbar-btn-active {
-    color: #60a5fa;
-    background: rgba(59, 130, 246, 0.12);
+    color: hsl(314 100% 78%);
+    background: hsl(314 100% 78% / 0.15);
   }
 
-  /* Better focus ring */
+  /* Better focus ring - pink glow */
   .focus-ring-enhanced {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-1 focus-visible:ring-offset-slate-900;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
+    --tw-ring-color: hsl(314 100% 78% / 0.5);
   }
 
-  /* Tool icon enhancement */
+  /* Tool icon enhancement - softer shadows */
   .tool-icon-enhanced {
     box-shadow:
-      0 1px 3px rgba(0, 0, 0, 0.3),
+      0 2px 8px rgba(255, 144, 232, 0.2),
       inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
   }
 
   /* Avatar consistent colors based on hash */
   .avatar-consistent {
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 8px rgba(255, 144, 232, 0.15);
   }
 
-  /* Loading skeleton */
+  /* Loading skeleton - Gumroad style */
   @keyframes skeleton-pulse {
     0%, 100% { opacity: 0.4; }
     50% { opacity: 0.7; }
@@ -463,13 +494,13 @@ html.light,
   .skeleton {
     animation: skeleton-pulse 1.5s ease-in-out infinite;
     background: linear-gradient(90deg,
-      rgba(255, 255, 255, 0.05) 0%,
-      rgba(255, 255, 255, 0.1) 50%,
-      rgba(255, 255, 255, 0.05) 100%);
-    border-radius: 4px;
+      hsl(314 100% 78% / 0.05) 0%,
+      hsl(314 100% 78% / 0.1) 50%,
+      hsl(314 100% 78% / 0.05) 100%);
+    border-radius: 8px;
   }
 
-  /* Panel collapse button */
+  /* Panel collapse button - Gumroad style */
   .panel-collapse-btn {
     position: absolute;
     left: -12px;
@@ -477,29 +508,143 @@ html.light,
     transform: translateY(-50%);
     width: 24px;
     height: 48px;
-    background: #1e293b;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
     border-right: none;
-    border-radius: 6px 0 0 6px;
+    border-radius: 10px 0 0 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #94a3b8;
+    color: hsl(var(--muted-foreground));
     cursor: pointer;
-    transition: all 0.15s;
+    transition: all 0.2s ease;
   }
 
   .panel-collapse-btn:hover {
-    background: #334155;
-    color: #e2e8f0;
+    background: hsl(314 100% 78% / 0.1);
+    color: hsl(314 100% 78%);
   }
 
   /* Empty group state */
   .group-empty {
-    padding: 12px 16px;
-    color: #64748b;
+    padding: 16px 20px;
+    color: hsl(var(--muted-foreground));
     font-style: italic;
-    font-size: 11px;
+    font-size: 13px;
+  }
+
+  /* =====================================================
+     GUMROAD SPECIAL EFFECTS
+     ===================================================== */
+
+  /* Gumroad-style hover lift effect */
+  .gumroad-hover {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .gumroad-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px -8px hsl(314 100% 78% / 0.3);
+  }
+
+  /* Gumroad gradient backgrounds */
+  .gumroad-gradient-pink {
+    background: linear-gradient(135deg, hsl(314 100% 78%) 0%, hsl(280 80% 70%) 100%);
+  }
+
+  .gumroad-gradient-yellow {
+    background: linear-gradient(135deg, hsl(54 100% 50%) 0%, hsl(40 100% 55%) 100%);
+  }
+
+  .gumroad-gradient-pink-yellow {
+    background: linear-gradient(135deg, hsl(314 100% 78%) 0%, hsl(54 100% 50%) 100%);
+  }
+
+  /* Gumroad card style */
+  .gumroad-card {
+    background: hsl(var(--card));
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.1);
+    border: 1px solid hsl(var(--border));
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .gumroad-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px -8px rgba(255, 144, 232, 0.2);
+  }
+
+  /* Gumroad button styles */
+  .gumroad-btn-primary {
+    background: hsl(314 100% 78%);
+    color: hsl(0 0% 0%);
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-weight: 600;
+    font-size: 15px;
+    box-shadow: 0 2px 8px rgba(255, 144, 232, 0.3);
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+  }
+
+  .gumroad-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 144, 232, 0.4);
+  }
+
+  .gumroad-btn-primary:active {
+    transform: translateY(0);
+  }
+
+  .gumroad-btn-secondary {
+    background: hsl(54 100% 50%);
+    color: hsl(0 0% 0%);
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-weight: 600;
+    font-size: 15px;
+    box-shadow: 0 2px 8px rgba(255, 230, 0, 0.3);
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+  }
+
+  .gumroad-btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 230, 0, 0.4);
+  }
+
+  /* Playful bounce animation */
+  @keyframes gumroad-bounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  .gumroad-bounce:hover {
+    animation: gumroad-bounce 0.4s ease-in-out;
+  }
+
+  /* Gumroad-style border accent */
+  .gumroad-border-accent {
+    border: 2px solid hsl(314 100% 78%);
+    border-radius: 12px;
+  }
+
+  /* Tag/pill style */
+  .gumroad-tag {
+    background: hsl(314 100% 78% / 0.15);
+    color: hsl(314 100% 60%);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .dark .gumroad-tag {
+    background: hsl(314 100% 78% / 0.2);
+    color: hsl(314 100% 78%);
   }
 }
 
@@ -507,98 +652,215 @@ html.light,
    LIGHT MODE - Comprehensive Theme Overrides
    ===================================================== */
 
-/* Light mode AI Vault specific colors */
+/* Light mode specific overrides */
 .light .ai-vault-bg {
-  background-color: #f8fafc;
+  background-color: hsl(48 100% 97%);
 }
 
 .light .ai-vault-sidebar {
-  background-color: #f1f5f9;
+  background-color: hsl(329 100% 98%);
 }
 
 .light .ai-vault-header {
-  background-color: #ffffff;
+  background-color: hsl(0 0% 100%);
 }
 
 /* Light mode skeleton loading */
 .light .skeleton {
   background: linear-gradient(90deg,
-    rgba(0, 0, 0, 0.03) 0%,
-    rgba(0, 0, 0, 0.06) 50%,
-    rgba(0, 0, 0, 0.03) 100%);
+    hsl(314 100% 78% / 0.08) 0%,
+    hsl(314 100% 78% / 0.15) 50%,
+    hsl(314 100% 78% / 0.08) 100%);
 }
 
 /* Light mode panel collapse button */
 .light .panel-collapse-btn {
-  background: #ffffff;
-  border-color: rgba(0, 0, 0, 0.1);
-  color: #64748b;
+  background: hsl(0 0% 100%);
+  border-color: hsl(0 0% 90%);
+  color: hsl(0 0% 50%);
 }
 
 .light .panel-collapse-btn:hover {
-  background: #f8fafc;
-  color: #334155;
+  background: hsl(314 100% 78% / 0.1);
+  color: hsl(314 100% 70%);
 }
 
 /* Light mode keyboard hints */
 .light .kbd {
-  background-color: rgba(0, 0, 0, 0.05);
-  border-color: rgba(0, 0, 0, 0.1);
-  color: #475569;
+  background-color: hsl(48 20% 95%);
+  border-color: hsl(0 0% 88%);
+  color: hsl(0 0% 30%);
 }
 
 /* Light mode shortcut hints */
 .light .shortcut-hint {
-  color: #64748b;
-  background: rgba(0, 0, 0, 0.05);
+  color: hsl(0 0% 50%);
+  background: hsl(48 20% 95%);
 }
 
 /* Light mode focus ring */
 .light .focus-ring-enhanced {
-  --tw-ring-offset-color: #ffffff;
+  --tw-ring-offset-color: hsl(48 100% 97%);
 }
 
 /* Light mode toolbar button active state */
 .light .toolbar-btn-active {
-  color: #2563eb;
-  background: rgba(37, 99, 235, 0.1);
+  color: hsl(314 100% 65%);
+  background: hsl(314 100% 78% / 0.12);
 }
 
 /* Light mode selection indicator */
 .light .selection-indicator {
-  background-color: rgba(37, 99, 235, 0.1);
-  border-left-color: #3b82f6;
+  background-color: hsl(314 100% 78% / 0.12);
+  border-left-color: hsl(314 100% 70%);
 }
 
 .light .selection-indicator-enhanced {
-  background: linear-gradient(to right, rgba(37, 99, 235, 0.15), transparent);
-  border-left-color: #3b82f6;
+  background: linear-gradient(to right, hsl(314 100% 78% / 0.15), transparent);
+  border-left-color: hsl(314 100% 70%);
 }
 
-/* Light mode cyan highlight for compatibility */
+/* Light mode pink highlight */
 .light .cyan-highlight {
-  background-color: rgba(37, 99, 235, 0.1);
-  border-left-color: #3b82f6;
+  background-color: hsl(314 100% 78% / 0.12);
+  border-left-color: hsl(314 100% 70%);
 }
 
-/* Light mode tree connector */
+/* Light mode tree connector - darker for visibility */
 .light .tree-connector {
-  color: rgba(100, 116, 139, 0.5);
+  color: hsl(0 0% 40%);
 }
 
-/* Light mode dropdown shadows */
+/* Light mode table text improvements */
+.light [class*="text-muted-foreground"] {
+  color: hsl(0 0% 20%) !important;
+}
+
+/* Light mode table headers - even darker */
+.light [class*="TableHead"],
+.light th {
+  color: hsl(0 0% 10%);
+  font-weight: 600;
+}
+
+/* Light mode dropdown shadows - softer */
 .light [data-radix-popper-content-wrapper] {
-  --tw-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --tw-shadow: 0 12px 32px -8px rgb(0 0 0 / 0.08), 0 4px 12px -4px rgb(0 0 0 / 0.05);
 }
 
 /* Light mode tool icon enhancement */
 .light .tool-icon-enhanced {
   box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    0 2px 8px rgba(255, 144, 232, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 /* Light mode avatar */
 .light .avatar-consistent {
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(255, 144, 232, 0.12);
+}
+
+/* Light mode gumroad hover effect */
+.light .gumroad-hover:hover {
+  box-shadow: 0 8px 24px -8px hsl(314 100% 78% / 0.2);
+}
+
+/* Light mode gumroad card */
+.light .gumroad-card {
+  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.06);
+}
+
+.light .gumroad-card:hover {
+  box-shadow: 0 12px 32px -8px rgba(255, 144, 232, 0.15);
+}
+
+/* =====================================================
+   LIGHT MODE SIDEBAR ENHANCEMENTS
+   ===================================================== */
+
+/* Light mode sidebar - distinct appearance */
+.light .bg-sidebar {
+  background-color: hsl(240 5% 96%) !important;
+  border-right: 1px solid hsl(240 5% 88%);
+  box-shadow: 2px 0 8px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Light mode sidebar text improvements */
+.light .text-sidebar-foreground {
+  color: hsl(240 10% 20%) !important;
+}
+
+.light .text-sidebar-foreground\/90 {
+  color: hsl(240 10% 30%) !important;
+}
+
+.light .text-sidebar-foreground\/80 {
+  color: hsl(240 10% 35%) !important;
+}
+
+.light .text-sidebar-foreground\/70 {
+  color: hsl(240 10% 40%) !important;
+}
+
+.light .text-sidebar-foreground\/60 {
+  color: hsl(240 10% 45%) !important;
+}
+
+.light .text-sidebar-foreground\/50 {
+  color: hsl(240 10% 50%) !important;
+}
+
+/* Light mode sidebar header title */
+.light .bg-sidebar .text-white {
+  color: hsl(240 10% 15%) !important;
+}
+
+/* Light mode sidebar accent (hover/selected states) */
+.light .bg-sidebar-accent {
+  background-color: hsl(314 60% 92%) !important;
+}
+
+.light .bg-sidebar-accent\/50 {
+  background-color: hsl(314 40% 95%) !important;
+}
+
+.light .hover\:bg-sidebar-accent\/50:hover {
+  background-color: hsl(314 40% 93%) !important;
+}
+
+/* Light mode sidebar input */
+.light .bg-sidebar-accent\/60 {
+  background-color: hsl(240 5% 92%) !important;
+  border-color: hsl(240 5% 85%) !important;
+}
+
+.light .bg-sidebar-accent\/60::placeholder {
+  color: hsl(240 5% 55%) !important;
+}
+
+/* Light mode sidebar border */
+.light .border-sidebar-border\/40 {
+  border-color: hsl(240 5% 88%) !important;
+}
+
+/* Light mode section headers */
+.light .bg-sidebar .uppercase {
+  color: hsl(240 10% 40%) !important;
+}
+
+/* Light mode sidebar selected item */
+.light .bg-sidebar .bg-sidebar-accent.text-white {
+  background-color: hsl(314 70% 88%) !important;
+  color: hsl(240 10% 10%) !important;
+}
+
+/* Light mode sidebar count badges */
+.light .bg-sidebar .bg-sidebar-foreground\/15 {
+  background-color: hsl(240 5% 90%) !important;
+  color: hsl(240 10% 35%) !important;
+}
+
+.light .bg-sidebar .bg-sidebar-foreground\/10 {
+  background-color: hsl(240 5% 92%) !important;
+  color: hsl(240 10% 40%) !important;
 }
